@@ -195,6 +195,19 @@ export async function getMemoryContext(conversationId: string): Promise<string> 
   try {
     await connectDB();
     
+    // If conversationId is 'general', get memories from all conversations
+    if (conversationId === 'general') {
+      const memories = await Memory.find({}).sort({ lastUpdated: -1 }).limit(5);
+      
+      if (memories.length === 0) {
+        return '';
+      }
+      
+      // Combine all memories into a general context
+      const generalContext = memories.map(memory => memory.getContext()).join('\n\n');
+      return `Previous conversation memories:\n${generalContext}`;
+    }
+    
     const memory = await Memory.findOne({ conversationId });
     
     if (!memory) {

@@ -69,6 +69,14 @@ export async function POST(request: NextRequest) {
       if (memoryContext) {
         console.log(`📄 Memory context length: ${memoryContext.length} characters`);
       }
+    } else {
+      // For new conversations, get general memory context from all conversations
+      console.log(`🔍 Retrieving general memory context for new conversation`);
+      memoryContext = await getMemoryContext('general');
+      console.log(`📝 General memory context retrieved: ${memoryContext ? 'Yes' : 'No'}`);
+      if (memoryContext) {
+        console.log(`📄 General memory context length: ${memoryContext.length} characters`);
+      }
     }
 
     // Prepare messages for AI with context management and memory
