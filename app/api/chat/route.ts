@@ -75,15 +75,14 @@ export async function POST(request: NextRequest) {
     }
     
     if (!conversation) {
-      conversation = new Conversation({
+      conversation = await Conversation.create({
         title: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
         messageCount: 0
       });
-      await conversation.save();
     }
 
     // Save user message
-    const userMessage = new Message({
+    const userMessage = await Message.create({
       conversationId: conversation._id,
       role: 'user',
       content: message,
@@ -96,7 +95,6 @@ export async function POST(request: NextRequest) {
         cloudinaryId: att.cloudinaryId
       }))
     });
-    await userMessage.save();
 
     if (stream) {
       // Return streaming response using Vercel AI SDK compatible approach
@@ -110,13 +108,12 @@ export async function POST(request: NextRequest) {
               for await (const chunk of streamChatResponse(messages)) {
                 if (chunk.done) {
                   // Save assistant message
-                  const assistantMessage = new Message({
+                  const assistantMessage = await Message.create({
                     conversationId: conversation._id,
                     role: 'assistant',
                     content: fullResponse,
                     model: 'Qwen/Qwen3-Next-80B-A3B-Instruct:novita'
                   });
-                  await assistantMessage.save();
                   
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
                   controller.close();
@@ -159,14 +156,13 @@ export async function POST(request: NextRequest) {
       const response = await generateChatResponse(messages);
       
       // Save assistant message
-      const assistantMessage = new Message({
+      const assistantMessage = await Message.create({
         conversationId: conversation._id,
         role: 'assistant',
         content: response.content,
         aiModel: response.model,
         tokenCount: response.usage?.totalTokens
       });
-      await assistantMessage.save();
 
       return NextResponse.json({
         id: response.id,

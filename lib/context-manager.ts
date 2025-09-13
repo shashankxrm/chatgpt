@@ -207,7 +207,7 @@ export async function manageContext(
       result.messagesTrimmed = olderMessages.length;
     }
   } else {
-    // Just trim messages without summarization
+    // Just trim messages without summarization when over recommended limit
     const trimmedMessages = trimMessages(messages, config);
     result.messages = trimmedMessages.map(msg => ({
       role: msg.role as 'user' | 'assistant' | 'system',
