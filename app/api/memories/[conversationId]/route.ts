@@ -28,7 +28,7 @@ export async function GET(
         id: memory._id,
         conversationId: memory.conversationId,
         summary: memory.summary,
-        keyPoints: memory.keyPoints.map(point => ({
+        keyPoints: memory.keyPoints.map((point: { key: string; value: string; importance: number; createdAt: Date }) => ({
           key: point.key,
           value: point.value,
           importance: point.importance,
