@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getMemoryContext, processConversationMemory } from "@/lib/memory-manager"
+import { processConversationMemory } from "@/lib/memory-manager"
 import { connectDB, Memory } from "@/lib/models"
 
 // GET /api/memories/[conversationId] - Get memory for specific conversation

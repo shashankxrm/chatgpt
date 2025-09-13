@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getAllMemories, cleanupMemories } from "@/lib/memory-manager"
 
 // GET /api/memories - Get all memories
