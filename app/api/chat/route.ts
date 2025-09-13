@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { sendChatCompletion, sendChatCompletionStream, type ChatMessage } from "@/lib/ai/huggingface"
+import { generateChatResponse, streamChatResponse, type ChatMessage } from "@/lib/ai/vercel-ai"
 import { connectDB, Conversation, Message } from "@/lib/models"
 import { processFileContent } from "@/lib/file-processing"
 
@@ -81,58 +81,64 @@ export async function POST(request: NextRequest) {
     await userMessage.save();
 
     if (stream) {
-      // Return streaming response
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream({
-        async start(controller) {
-          try {
-            let fullResponse = '';
-            
-            for await (const chunk of sendChatCompletionStream(messages)) {
-              if (chunk.done) {
-                // Save assistant message
-                const assistantMessage = new Message({
-                  conversationId: conversation._id,
-                  role: 'assistant',
-                  content: fullResponse,
-                  model: chunk.model
-                });
-                await assistantMessage.save();
+      // Return streaming response using Vercel AI SDK compatible approach
+      try {
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+          async start(controller) {
+            try {
+              let fullResponse = '';
+              
+              for await (const chunk of streamChatResponse(messages)) {
+                if (chunk.done) {
+                  // Save assistant message
+                  const assistantMessage = new Message({
+                    conversationId: conversation._id,
+                    role: 'assistant',
+                    content: fullResponse,
+                    model: 'Qwen/Qwen3-Next-80B-A3B-Instruct:novita'
+                  });
+                  await assistantMessage.save();
+                  
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
+                  controller.close();
+                  return;
+                }
                 
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
-                controller.close();
-                return;
+                fullResponse += chunk.content;
+                
+                const data = {
+                  content: chunk.content,
+                  done: false
+                };
+                
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
               }
-              
-              fullResponse += chunk.content;
-              
-              const data = {
-                id: chunk.id,
-                content: chunk.content,
-                model: chunk.model,
-                done: false
-              };
-              
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+            } catch (error) {
+              console.error('Streaming error:', error);
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'Streaming failed' })}\n\n`));
+              controller.close();
             }
-          } catch (error) {
-            console.error('Streaming error:', error);
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'Streaming failed' })}\n\n`));
-            controller.close();
           }
-        }
-      });
+        });
 
-      return new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      });
+        return new Response(stream, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+          },
+        });
+      } catch (error) {
+        console.error('Streaming error:', error);
+        return NextResponse.json(
+          { error: 'Streaming failed', details: error instanceof Error ? error.message : 'Unknown error' },
+          { status: 500 }
+        );
+      }
     } else {
-      // Non-streaming response
-      const response = await sendChatCompletion(messages);
+      // Non-streaming response using Vercel AI SDK
+      const response = await generateChatResponse(messages);
       
       // Save assistant message
       const assistantMessage = new Message({
@@ -140,7 +146,7 @@ export async function POST(request: NextRequest) {
         role: 'assistant',
         content: response.content,
         model: response.model,
-        tokenCount: response.usage?.total_tokens
+        tokenCount: response.usage?.totalTokens
       });
       await assistantMessage.save();
 
