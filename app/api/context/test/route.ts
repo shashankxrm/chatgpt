@@ -3,7 +3,7 @@ import { testContextManagement, getContextConfig } from "@/lib/context-manager"
 import { connectDB } from "@/lib/models"
 import Message from "@/lib/models/message"
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await connectDB();
     

@@ -158,7 +158,7 @@ export async function manageContext(
   const config = getContextConfig(model);
   const totalTokens = calculateMessageTokens(messages);
 
-  let result: ContextResult = {
+  const result: ContextResult = {
     messages: messages.map(msg => ({
       role: msg.role as 'user' | 'assistant' | 'system',
       content: msg.content,

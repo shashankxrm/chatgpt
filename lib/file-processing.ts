@@ -3,7 +3,7 @@ import mammoth from 'mammoth';
 
 export interface ProcessedFileContent {
   text?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   error?: string;
 }
 

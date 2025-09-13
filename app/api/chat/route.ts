@@ -1,8 +1,16 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { generateChatResponse, streamChatResponse, type ChatMessage } from "@/lib/ai/vercel-ai"
 import { connectDB, Conversation, Message } from "@/lib/models"
-import { processFileContent } from "@/lib/file-processing"
-import { getConversationContext, getContextConfig } from "@/lib/context-manager"
+import { getConversationContext } from "@/lib/context-manager"
+
+interface AttachedFile {
+  id: string
+  name: string
+  size: number
+  type: string
+  url: string
+  cloudinaryId?: string
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -79,7 +87,7 @@ export async function POST(request: NextRequest) {
       conversationId: conversation._id,
       role: 'user',
       content: message,
-      attachments: attachments.map((att: any) => ({
+      attachments: attachments.map((att: AttachedFile) => ({
         id: att.id,
         name: att.name,
         size: att.size,

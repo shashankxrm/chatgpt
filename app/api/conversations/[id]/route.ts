@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectDB, Conversation, Message } from "@/lib/models"
-import { generateChatResponse } from "@/lib/ai/vercel-ai"
 
 // GET /api/conversations/[id] - Get conversation with messages
 export async function GET(

@@ -17,6 +17,20 @@ interface AttachedFile {
   isUploading?: boolean
 }
 
+interface UploadedFile {
+  id: string
+  name: string
+  size: number
+  type: string
+  url: string
+  cloudinaryId?: string
+}
+
+interface UploadError {
+  filename: string
+  error: string
+}
+
 interface ChatInputProps {
   onSendMessage: (message: string, attachments?: AttachedFile[]) => void
   disabled?: boolean
@@ -109,7 +123,7 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
         // Replace loading files with uploaded files
         setAttachedFiles((prev) => {
           const nonLoadingFiles = prev.filter(f => !f.isUploading)
-          const uploadedFiles = result.uploadedFiles.map((uploaded: any) => ({
+          const uploadedFiles = result.uploadedFiles.map((uploaded: UploadedFile) => ({
             id: uploaded.id,
             name: uploaded.name,
             size: uploaded.size,
@@ -129,7 +143,7 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
 
       // Show any file-specific errors
       if (result.uploadErrors && result.uploadErrors.length > 0) {
-        const errorMessages = result.uploadErrors.map((err: any) => 
+        const errorMessages = result.uploadErrors.map((err: UploadError) => 
           `${err.filename}: ${err.error}`
         ).join('\n')
         alert(`Some files failed to upload:\n${errorMessages}`)

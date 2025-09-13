@@ -1,4 +1,4 @@
-import { HfInference } from '@huggingface/inference';
+// Note: HfInference import removed as it's not used in this file
 
 const HF_API_KEY = process.env.HUGGINGFACE_API_KEY;
 const HF_API_URL = 'https://router.huggingface.co/v1/chat/completions';

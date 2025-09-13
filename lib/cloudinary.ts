@@ -55,7 +55,7 @@ export async function uploadToCloudinary(
     folder?: string;
     resource_type?: 'image' | 'video' | 'raw' | 'auto';
     public_id?: string;
-    transformation?: any;
+    transformation?: Record<string, unknown>;
   } = {}
 ): Promise<UploadResult> {
   try {

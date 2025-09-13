@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectDB, Conversation, Message } from "@/lib/models"
-import { generateChatResponse } from "@/lib/ai/vercel-ai"
 
 // GET /api/conversations - Get all conversations
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await connectDB();
 
@@ -88,7 +87,7 @@ export async function POST(request: NextRequest) {
 }
 
 // DELETE /api/conversations - Delete all conversations (for testing)
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
     await connectDB();
 

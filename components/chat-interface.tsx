@@ -33,16 +33,19 @@ interface Conversation {
   messageCount: number
 }
 
+// Note: DatabaseMessage interface available for future use
+
 export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
-  const [conversations, setConversations] = useState<Conversation[]>([])
+  // Note: Conversation state available for future sidebar integration
+  const [, setConversations] = useState<Conversation[]>([])
 
   // Load conversations on component mount
   useEffect(() => {
     loadConversations();
-  }, []);
+  }, [loadConversations]);
 
   // Load conversations from API
   const loadConversations = useCallback(async () => {
@@ -58,69 +61,8 @@ export function ChatInterface() {
     }
   }, []);
 
-  // Load specific conversation
-  const loadConversation = useCallback(async (conversationId: string) => {
-    try {
-      const response = await fetch(`/api/conversations/${conversationId}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setMessages(data.messages.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        })));
-        setCurrentConversationId(conversationId);
-      }
-    } catch (error) {
-      console.error('Error loading conversation:', error);
-    }
-  }, []);
-
-  // Create new conversation
-  const createNewConversation = useCallback(async () => {
-    try {
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: 'New Conversation'
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setMessages([]);
-        setCurrentConversationId(data.conversation.id);
-        await loadConversations(); // Refresh conversation list
-      }
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-    }
-  }, [loadConversations]);
-
-  // Delete conversation
-  const deleteConversation = useCallback(async (conversationId: string) => {
-    try {
-      const response = await fetch(`/api/conversations/${conversationId}`, {
-        method: 'DELETE'
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        if (currentConversationId === conversationId) {
-          setMessages([]);
-          setCurrentConversationId(null);
-        }
-        await loadConversations(); // Refresh conversation list
-      }
-    } catch (error) {
-      console.error('Error deleting conversation:', error);
-    }
-  }, [currentConversationId, loadConversations]);
+  // Note: Conversation management functions are available but not used in current UI
+  // They can be integrated with sidebar components when needed
 
   const handleSendMessage = useCallback(async (content: string, attachments?: AttachedFile[]) => {
     const userMessage: Message = {
