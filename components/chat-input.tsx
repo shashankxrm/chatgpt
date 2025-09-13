@@ -13,6 +13,8 @@ interface AttachedFile {
   size: number
   type: string
   url: string
+  cloudinaryId?: string
+  isUploading?: boolean
 }
 
 interface ChatInputProps {
@@ -72,26 +74,75 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
     fileInputRef.current?.click()
   }
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
+    
+    if (files.length === 0) return
 
-    files.forEach((file) => {
-      if (file.size > 25 * 1024 * 1024) {
-        alert(`File "${file.name}" is too large. Maximum size is 25MB.`)
-        return
+    // Show loading state
+    const loadingFiles = files.map(file => ({
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      url: '',
+      isUploading: true
+    }))
+
+    setAttachedFiles((prev) => [...prev, ...loadingFiles])
+
+    try {
+      // Upload files to our API
+      const formData = new FormData()
+      files.forEach(file => {
+        formData.append('files', file)
+      })
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
+
+      if (result.success && result.uploadedFiles) {
+        // Replace loading files with uploaded files
+        setAttachedFiles((prev) => {
+          const nonLoadingFiles = prev.filter(f => !f.isUploading)
+          const uploadedFiles = result.uploadedFiles.map((uploaded: any) => ({
+            id: uploaded.id,
+            name: uploaded.name,
+            size: uploaded.size,
+            type: uploaded.type,
+            url: uploaded.url,
+            cloudinaryId: uploaded.cloudinaryId
+          }))
+          return [...nonLoadingFiles, ...uploadedFiles]
+        })
+
+        console.log(`✅ Uploaded ${result.uploadedFiles.length} files successfully`)
+      } else {
+        // Remove loading files and show error
+        setAttachedFiles((prev) => prev.filter(f => !f.isUploading))
+        alert(`Upload failed: ${result.error || 'Unknown error'}`)
       }
 
-      const newFile: AttachedFile = {
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        url: URL.createObjectURL(file),
+      // Show any file-specific errors
+      if (result.uploadErrors && result.uploadErrors.length > 0) {
+        const errorMessages = result.uploadErrors.map((err: any) => 
+          `${err.filename}: ${err.error}`
+        ).join('\n')
+        alert(`Some files failed to upload:\n${errorMessages}`)
       }
 
-      setAttachedFiles((prev) => [...prev, newFile])
-    })
+    } catch (error) {
+      // Remove loading files and show error
+      setAttachedFiles((prev) => prev.filter(f => !f.isUploading))
+      console.error('Upload error:', error)
+      alert('Upload failed. Please try again.')
+    }
 
+    // Clear input
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
@@ -144,7 +195,10 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
                 <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                   {file.name}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {formatFileSize(file.size)}
+                  {file.isUploading && <span className="ml-2 text-blue-500">Uploading...</span>}
+                </div>
               </div>
               <Button
                 type="button"
