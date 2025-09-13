@@ -33,36 +33,49 @@ interface Conversation {
   messageCount: number
 }
 
+interface ChatInterfaceProps {
+  currentConversationId?: string | null
+  onConversationCreated?: (conversationId: string) => void
+}
+
 // Note: DatabaseMessage interface available for future use
 
-export function ChatInterface() {
+export function ChatInterface({ currentConversationId, onConversationCreated }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
-  // Note: Conversation state available for future sidebar integration
-  const [, setConversations] = useState<Conversation[]>([])
 
-  // Load conversations from API
-  const loadConversations = useCallback(async () => {
+  // Load messages for the current conversation
+  const loadMessages = useCallback(async (conversationId: string) => {
     try {
-      const response = await fetch('/api/conversations');
-      const data = await response.json();
+      const response = await fetch(`/api/conversations/${conversationId}`)
+      const data = await response.json()
       
       if (data.success) {
-        setConversations(data.conversations);
+        const loadedMessages: Message[] = data.messages.map((msg: any) => ({
+          id: msg.id,
+          content: msg.content,
+          role: msg.role,
+          timestamp: new Date(msg.timestamp),
+          attachments: msg.attachments || [],
+          model: msg.model,
+          isEdited: msg.isEdited || false,
+          editedAt: msg.editedAt ? new Date(msg.editedAt) : undefined,
+        }))
+        setMessages(loadedMessages)
       }
     } catch (error) {
-      console.error('Error loading conversations:', error);
+      console.error('Error loading messages:', error)
     }
-  }, []);
+  }, [])
 
-  // Load conversations on component mount
+  // Load messages when conversation changes
   useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
-
-  // Note: Conversation management functions are available but not used in current UI
-  // They can be integrated with sidebar components when needed
+    if (currentConversationId) {
+      loadMessages(currentConversationId)
+    } else {
+      setMessages([]) // Clear messages for new chat
+    }
+  }, [currentConversationId, loadMessages])
 
   const handleSendMessage = useCallback(async (content: string, attachments?: AttachedFile[]) => {
     const userMessage: Message = {
@@ -99,8 +112,9 @@ export function ChatInterface() {
 
       // Update current conversation ID if this is a new conversation
       if (data.conversation_id && !currentConversationId) {
-        setCurrentConversationId(data.conversation_id);
-        await loadConversations(); // Refresh conversation list
+        if (onConversationCreated) {
+          onConversationCreated(data.conversation_id);
+        }
       }
 
       const assistantMessage: Message = {
@@ -126,7 +140,7 @@ export function ChatInterface() {
     } finally {
       setIsLoading(false)
     }
-  }, [currentConversationId, loadConversations])
+  }, [currentConversationId, onConversationCreated])
 
   const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
     if (!currentConversationId) return;
