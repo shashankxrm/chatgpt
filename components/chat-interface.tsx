@@ -25,17 +25,20 @@ interface Message {
   editedAt?: Date
 }
 
-interface Conversation {
-  id: string
-  title: string
-  createdAt: string
-  updatedAt: string
-  messageCount: number
-}
-
 interface ChatInterfaceProps {
   currentConversationId?: string | null
   onConversationCreated?: (conversationId: string) => void
+}
+
+interface ApiMessage {
+  id: string
+  role: string
+  content: string
+  timestamp: string
+  attachments?: AttachedFile[]
+  model?: string
+  isEdited?: boolean
+  editedAt?: string
 }
 
 // Note: DatabaseMessage interface available for future use
@@ -51,7 +54,7 @@ export function ChatInterface({ currentConversationId, onConversationCreated }: 
       const data = await response.json()
       
       if (data.success) {
-        const loadedMessages: Message[] = data.messages.map((msg: any) => ({
+        const loadedMessages: Message[] = data.messages.map((msg: ApiMessage) => ({
           id: msg.id,
           content: msg.content,
           role: msg.role,

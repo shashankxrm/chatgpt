@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
@@ -32,42 +32,26 @@ interface ChatHistory {
 
 interface SidebarProps {
   currentConversationId?: string | null
+  conversations?: Conversation[]
   onNewChat?: () => void
   onSelectConversation?: (conversationId: string) => void
+  onRefresh?: () => void
 }
 
-export function Sidebar({ currentConversationId, onNewChat, onSelectConversation }: SidebarProps) {
+interface Conversation {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+  messageCount: number
+}
+
+export function Sidebar({ currentConversationId, conversations = [], onNewChat, onSelectConversation, onRefresh }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [editingChatId, setEditingChatId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState("")
-  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-
-  // Load conversations from API
-  const loadConversations = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      const response = await fetch('/api/conversations')
-      const data = await response.json()
-      
-      if (data.success) {
-        const conversations = data.conversations.map((conv: any) => ({
-          id: conv.id,
-          title: conv.title,
-          timestamp: formatTimestamp(conv.updatedAt),
-          createdAt: conv.createdAt,
-          updatedAt: conv.updatedAt,
-          messageCount: conv.messageCount
-        }))
-        setChatHistory(conversations)
-      }
-    } catch (error) {
-      console.error('Error loading conversations:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const [isLoading] = useState(false)
 
   // Format timestamp for display
   const formatTimestamp = (dateString: string) => {
@@ -84,10 +68,15 @@ export function Sidebar({ currentConversationId, onNewChat, onSelectConversation
     return date.toLocaleDateString()
   }
 
-  // Load conversations on component mount
-  useEffect(() => {
-    loadConversations()
-  }, [loadConversations])
+  // Convert conversations to chat history format
+  const chatHistory: ChatHistory[] = conversations.map(conv => ({
+    id: conv.id,
+    title: conv.title,
+    timestamp: formatTimestamp(conv.updatedAt),
+    createdAt: conv.createdAt,
+    updatedAt: conv.updatedAt,
+    messageCount: conv.messageCount
+  }))
 
   const handleNewChat = () => {
     if (onNewChat) {
@@ -121,15 +110,8 @@ export function Sidebar({ currentConversationId, onNewChat, onSelectConversation
           body: JSON.stringify({ title: editTitle }),
         })
 
-        if (response.ok) {
-          // Update local state
-          setChatHistory((prev) => 
-            prev.map((chat) => 
-              chat.id === editingChatId 
-                ? { ...chat, title: editTitle } 
-                : chat
-            )
-          )
+        if (response.ok && onRefresh) {
+          onRefresh() // Refresh the sidebar
         }
       } catch (error) {
         console.error('Error updating conversation title:', error)
@@ -152,12 +134,14 @@ export function Sidebar({ currentConversationId, onNewChat, onSelectConversation
       })
 
       if (response.ok) {
-        // Remove from local state
-        setChatHistory((prev) => prev.filter((chat) => chat.id !== chatId))
-        
         // If this was the current conversation, clear it
         if (currentConversationId === chatId && onSelectConversation) {
           onSelectConversation('')
+        }
+        
+        // Refresh the sidebar
+        if (onRefresh) {
+          onRefresh()
         }
       }
     } catch (error) {

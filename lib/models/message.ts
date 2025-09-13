@@ -93,11 +93,10 @@ const MessageSchema = new Schema<IMessage>({
 });
 
 // Indexes for efficient queries
-// Single field index for conversationId (used in deleteMany operations and sorting)
-MessageSchema.index({ conversationId: 1 });
 // Index for role-based queries
 MessageSchema.index({ role: 1 });
 // Compound index for conversation messages sorted by timestamp (ascending)
+// This also covers single field queries on conversationId
 MessageSchema.index({ conversationId: 1, timestamp: 1 });
 
 // Pre-save middleware to update conversation stats

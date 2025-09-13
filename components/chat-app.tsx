@@ -16,6 +16,7 @@ interface Conversation {
 export function ChatApp() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([])
+  const [refreshSidebar, setRefreshSidebar] = useState(0) // Trigger for sidebar refresh
 
   // Load conversations from API
   const loadConversations = useCallback(async () => {
@@ -31,10 +32,10 @@ export function ChatApp() {
     }
   }, [])
 
-  // Load conversations on component mount
+  // Load conversations on component mount and when refreshSidebar changes
   useEffect(() => {
     loadConversations()
-  }, [loadConversations])
+  }, [loadConversations, refreshSidebar])
 
   // Handle new chat
   const handleNewChat = useCallback(() => {
@@ -49,8 +50,13 @@ export function ChatApp() {
   // Handle conversation created (called from chat interface)
   const handleConversationCreated = useCallback((conversationId: string) => {
     setCurrentConversationId(conversationId)
-    loadConversations() // Refresh the conversation list
-  }, [loadConversations])
+    setRefreshSidebar(prev => prev + 1) // Trigger sidebar refresh
+  }, [])
+
+  // Function to refresh sidebar (can be called from sidebar)
+  const handleRefreshSidebar = useCallback(() => {
+    setRefreshSidebar(prev => prev + 1)
+  }, [])
 
   return (
     <div
@@ -60,8 +66,10 @@ export function ChatApp() {
     >
       <Sidebar 
         currentConversationId={currentConversationId}
+        conversations={conversations}
         onNewChat={handleNewChat}
         onSelectConversation={handleSelectConversation}
+        onRefresh={handleRefreshSidebar}
       />
       <div className="flex flex-col flex-1 min-w-0 min-h-0">
         <Header />
