@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { generateChatResponse, streamChatResponse, type ChatMessage } from "@/lib/ai/vercel-ai"
 import { connectDB, Conversation, Message } from "@/lib/models"
 import { getConversationContext } from "@/lib/context-manager"
+import { getMemoryContext, processConversationMemory } from "@/lib/memory-manager"
 
 interface AttachedFile {
   id: string
@@ -59,14 +60,36 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // Prepare messages for AI with context management
-    const messages: ChatMessage[] = [
-      ...contextResult.messages,
-      {
-        role: 'user',
-        content: message + fileContext
+    // Get memory context for enhanced responses
+    let memoryContext = '';
+    if (conversationId) {
+      console.log(`🔍 Retrieving memory context for conversation: ${conversationId}`);
+      memoryContext = await getMemoryContext(conversationId);
+      console.log(`📝 Memory context retrieved: ${memoryContext ? 'Yes' : 'No'}`);
+      if (memoryContext) {
+        console.log(`📄 Memory context length: ${memoryContext.length} characters`);
       }
-    ];
+    }
+
+    // Prepare messages for AI with context management and memory
+    const messages: ChatMessage[] = [];
+    
+    // Add memory context as system message if available
+    if (memoryContext) {
+      messages.push({
+        role: 'system',
+        content: `Previous conversation context:\n${memoryContext}`
+      });
+    }
+    
+    // Add conversation context
+    messages.push(...contextResult.messages);
+    
+    // Add current user message
+    messages.push({
+      role: 'user',
+      content: message + fileContext
+    });
 
     // Get or create conversation
     let conversation;
@@ -117,6 +140,11 @@ export async function POST(request: NextRequest) {
                     model: 'Qwen/Qwen3-Next-80B-A3B-Instruct:novita'
                   });
                   await assistantMessage.save();
+
+                  // Process conversation memory asynchronously (don't wait for it)
+                  processConversationMemory(conversation._id).catch(error => {
+                    console.error('Error processing conversation memory:', error);
+                  });
                   
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
                   controller.close();
@@ -168,6 +196,14 @@ export async function POST(request: NextRequest) {
       });
       await assistantMessage.save();
 
+      // Process conversation memory asynchronously (don't wait for it)
+      console.log(`🧠 Processing memory for conversation: ${conversation._id}`);
+      processConversationMemory(conversation._id).then(() => {
+        console.log(`✅ Memory processed successfully for conversation: ${conversation._id}`);
+      }).catch(error => {
+        console.error('❌ Error processing conversation memory:', error);
+      });
+
       return NextResponse.json({
         id: response.id,
         content: response.content,
@@ -179,7 +215,8 @@ export async function POST(request: NextRequest) {
         context: {
           tokensUsed: contextResult.tokensUsed,
           messagesTrimmed: contextResult.messagesTrimmed,
-          hasSummary: !!contextResult.summary
+          hasSummary: !!contextResult.summary,
+          hasMemory: !!memoryContext
         }
       });
     }
