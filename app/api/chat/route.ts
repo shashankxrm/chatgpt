@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { generateChatResponse, streamChatResponse, type ChatMessage } from "@/lib/ai/vercel-ai"
 import { connectDB, Conversation, Message } from "@/lib/models"
 import { processFileContent } from "@/lib/file-processing"
+import { getConversationContext, getContextConfig } from "@/lib/context-manager"
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,12 +39,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Prepare messages for AI
+    // Get conversation context with intelligent management
+    let contextResult;
+    if (conversationId) {
+      contextResult = await getConversationContext(conversationId);
+    } else {
+      contextResult = {
+        messages: [],
+        tokensUsed: 0,
+        messagesTrimmed: 0,
+      };
+    }
+
+    // Prepare messages for AI with context management
     const messages: ChatMessage[] = [
-      {
-        role: 'system',
-        content: 'You are a helpful AI assistant. You can help with various tasks including answering questions, providing explanations, and assisting with problem-solving. Be helpful, accurate, and concise in your responses.'
-      },
+      ...contextResult.messages,
       {
         role: 'user',
         content: message + fileContext
@@ -157,7 +167,12 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
         conversation_id: conversation._id,
         model: response.model,
-        usage: response.usage
+        usage: response.usage,
+        context: {
+          tokensUsed: contextResult.tokensUsed,
+          messagesTrimmed: contextResult.messagesTrimmed,
+          hasSummary: !!contextResult.summary
+        }
       });
     }
 

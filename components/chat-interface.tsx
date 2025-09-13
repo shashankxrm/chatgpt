@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { MessageList } from "@/components/message-list"
 import { ChatInput } from "@/components/chat-input"
 
@@ -10,6 +10,8 @@ interface AttachedFile {
   size: number
   type: string
   url: string
+  cloudinaryId?: string
+  isUploading?: boolean
 }
 
 interface Message {
@@ -18,11 +20,107 @@ interface Message {
   role: "user" | "assistant"
   timestamp: Date
   attachments?: AttachedFile[]
+  model?: string
+  isEdited?: boolean
+  editedAt?: Date
+}
+
+interface Conversation {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+  messageCount: number
 }
 
 export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+
+  // Load conversations on component mount
+  useEffect(() => {
+    loadConversations();
+  }, []);
+
+  // Load conversations from API
+  const loadConversations = useCallback(async () => {
+    try {
+      const response = await fetch('/api/conversations');
+      const data = await response.json();
+      
+      if (data.success) {
+        setConversations(data.conversations);
+      }
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    }
+  }, []);
+
+  // Load specific conversation
+  const loadConversation = useCallback(async (conversationId: string) => {
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setMessages(data.messages.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        })));
+        setCurrentConversationId(conversationId);
+      }
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    }
+  }, []);
+
+  // Create new conversation
+  const createNewConversation = useCallback(async () => {
+    try {
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: 'New Conversation'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setMessages([]);
+        setCurrentConversationId(data.conversation.id);
+        await loadConversations(); // Refresh conversation list
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
+  }, [loadConversations]);
+
+  // Delete conversation
+  const deleteConversation = useCallback(async (conversationId: string) => {
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: 'DELETE'
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        if (currentConversationId === conversationId) {
+          setMessages([]);
+          setCurrentConversationId(null);
+        }
+        await loadConversations(); // Refresh conversation list
+      }
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+    }
+  }, [currentConversationId, loadConversations]);
 
   const handleSendMessage = useCallback(async (content: string, attachments?: AttachedFile[]) => {
     const userMessage: Message = {
@@ -37,7 +135,7 @@ export function ChatInterface() {
     setIsLoading(true)
 
     try {
-      // Call the real AI API
+      // Call the real AI API with conversation ID
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -45,6 +143,7 @@ export function ChatInterface() {
         },
         body: JSON.stringify({
           message: content,
+          conversationId: currentConversationId,
           attachments: attachments || [],
           stream: false
         }),
@@ -56,11 +155,18 @@ export function ChatInterface() {
 
       const data = await response.json()
 
+      // Update current conversation ID if this is a new conversation
+      if (data.conversation_id && !currentConversationId) {
+        setCurrentConversationId(data.conversation_id);
+        await loadConversations(); // Refresh conversation list
+      }
+
       const assistantMessage: Message = {
         id: data.id || Date.now().toString(),
         content: data.content,
         role: "assistant",
         timestamp: new Date(),
+        model: data.model,
       }
 
       setMessages((prev) => [...prev, assistantMessage])
@@ -78,40 +184,62 @@ export function ChatInterface() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [currentConversationId, loadConversations])
 
-  const handleEditMessage = useCallback((messageId: string, newContent: string) => {
-    setMessages((prev) => {
-      const messageIndex = prev.findIndex((m) => m.id === messageId)
-      if (messageIndex === -1) return prev
+  const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
+    if (!currentConversationId) return;
 
-      // Update the message and remove all subsequent messages
-      const updatedMessages = prev.slice(0, messageIndex + 1)
-      updatedMessages[messageIndex] = {
-        ...updatedMessages[messageIndex],
-        content: newContent,
-        timestamp: new Date(),
+    try {
+      const response = await fetch(`/api/conversations/${currentConversationId}/messages/${messageId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: newContent,
+          regenerate: true // Regenerate AI response if it's a user message
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
       }
 
-      return updatedMessages
-    })
+      const data = await response.json();
 
-    // Regenerate response after editing user message
-    if (newContent.trim()) {
-      setIsLoading(true)
-      setTimeout(() => {
-        const assistantMessage: Message = {
-          id: Date.now().toString(),
-          content:
-            "This is a regenerated response based on your edited message. In a real implementation, this would be a new AI response.",
-          role: "assistant",
-          timestamp: new Date(),
+      if (data.success) {
+        // Update the edited message
+        setMessages((prev) => {
+          const messageIndex = prev.findIndex((m) => m.id === messageId);
+          if (messageIndex === -1) return prev;
+
+          const updatedMessages = [...prev];
+          updatedMessages[messageIndex] = {
+            ...updatedMessages[messageIndex],
+            content: data.message.content,
+            isEdited: data.message.isEdited,
+            editedAt: data.message.editedAt ? new Date(data.message.editedAt) : undefined,
+          };
+          return updatedMessages;
+        });
+
+        // If there's a regenerated response, add it
+        if (data.regeneratedResponse) {
+          const regeneratedMessage: Message = {
+            id: data.regeneratedResponse.id,
+            content: data.regeneratedResponse.content,
+            role: 'assistant',
+            timestamp: new Date(data.regeneratedResponse.timestamp),
+            model: data.regeneratedResponse.model,
+          };
+
+          setMessages((prev) => [...prev, regeneratedMessage]);
         }
-        setMessages((prev) => [...prev, assistantMessage])
-        setIsLoading(false)
-      }, 1500)
+      }
+    } catch (error) {
+      console.error('Error editing message:', error);
     }
-  }, [])
+  }, [currentConversationId])
 
   const handleRegenerateResponse = useCallback(
     (messageId: string) => {

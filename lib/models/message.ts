@@ -56,8 +56,7 @@ const AttachedFileSchema = new Schema<IAttachedFile>({
 const MessageSchema = new Schema<IMessage>({
   conversationId: {
     type: String,
-    required: true,
-    index: true
+    required: true
   },
   role: {
     type: String,
@@ -72,8 +71,7 @@ const MessageSchema = new Schema<IMessage>({
   attachments: [AttachedFileSchema],
   timestamp: {
     type: Date,
-    default: Date.now,
-    index: true
+    default: Date.now
   },
   tokenCount: {
     type: Number,
@@ -95,9 +93,12 @@ const MessageSchema = new Schema<IMessage>({
 });
 
 // Indexes for efficient queries
-MessageSchema.index({ conversationId: 1, timestamp: 1 });
-MessageSchema.index({ conversationId: 1, timestamp: -1 });
+// Single field index for conversationId (used in deleteMany operations and sorting)
+MessageSchema.index({ conversationId: 1 });
+// Index for role-based queries
 MessageSchema.index({ role: 1 });
+// Compound index for conversation messages sorted by timestamp (ascending)
+MessageSchema.index({ conversationId: 1, timestamp: 1 });
 
 // Pre-save middleware to update conversation stats
 MessageSchema.pre('save', async function(next) {

@@ -1,45 +1,116 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { connectDB, Conversation, Message } from "@/lib/models"
+import { generateChatResponse } from "@/lib/ai/vercel-ai"
 
-export async function GET() {
-  // Placeholder for fetching user's conversation history
-  const mockConversations = [
-    {
-      id: "conv_1",
-      title: "React best practices",
-      last_message: "Thanks for the explanation!",
-      updated_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-      message_count: 8,
-    },
-    {
-      id: "conv_2",
-      title: "TypeScript interfaces",
-      last_message: "How do I extend interfaces?",
-      updated_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-      message_count: 12,
-    },
-    {
-      id: "conv_3",
-      title: "Next.js routing",
-      last_message: "Perfect, that works!",
-      updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-      message_count: 6,
-    },
-  ]
+// GET /api/conversations - Get all conversations
+export async function GET(request: NextRequest) {
+  try {
+    await connectDB();
 
-  return NextResponse.json({ conversations: mockConversations })
+    const conversations = await Conversation.find()
+      .sort({ updatedAt: -1 })
+      .limit(50) // Limit to recent 50 conversations
+      .lean();
+
+    return NextResponse.json({
+      success: true,
+      conversations: conversations.map(conv => ({
+        id: conv._id,
+        title: conv.title,
+        createdAt: conv.createdAt,
+        updatedAt: conv.updatedAt,
+        messageCount: conv.messageCount
+      }))
+    });
+  } catch (error) {
+    console.error("Error fetching conversations:", error);
+    return NextResponse.json(
+      { 
+        success: false,
+        error: "Failed to fetch conversations",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { status: 500 }
+    );
+  }
 }
 
+// POST /api/conversations - Create new conversation
 export async function POST(request: NextRequest) {
-  // Placeholder for creating new conversation
-  const { title } = await request.json()
+  try {
+    const { title, message } = await request.json();
+    
+    await connectDB();
 
-  const newConversation = {
-    id: `conv_${Date.now()}`,
-    title: title || "New conversation",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    message_count: 0,
+    // Create new conversation
+    const conversation = new Conversation({
+      title: title || 'New Conversation',
+      messageCount: 0
+    });
+    
+    await conversation.save();
+
+    // If there's an initial message, save it
+    if (message) {
+      const userMessage = new Message({
+        conversationId: conversation._id,
+        role: 'user',
+        content: message
+      });
+      await userMessage.save();
+
+      // Update conversation message count
+      conversation.messageCount = 1;
+      await conversation.save();
+    }
+
+    return NextResponse.json({
+      success: true,
+      conversation: {
+        id: conversation._id,
+        title: conversation.title,
+        createdAt: conversation.createdAt,
+        updatedAt: conversation.updatedAt,
+        messageCount: conversation.messageCount
+      }
+    });
+  } catch (error) {
+    console.error("Error creating conversation:", error);
+    return NextResponse.json(
+      { 
+        success: false,
+        error: "Failed to create conversation",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { status: 500 }
+    );
   }
+}
 
-  return NextResponse.json(newConversation)
+// DELETE /api/conversations - Delete all conversations (for testing)
+export async function DELETE(request: NextRequest) {
+  try {
+    await connectDB();
+
+    // Delete all messages first
+    await Message.deleteMany({});
+    
+    // Then delete all conversations
+    await Conversation.deleteMany({});
+
+    return NextResponse.json({
+      success: true,
+      message: "All conversations deleted"
+    });
+  } catch (error) {
+    console.error("Error deleting conversations:", error);
+    return NextResponse.json(
+      { 
+        success: false,
+        error: "Failed to delete conversations",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }, 
+      { status: 500 }
+    );
+  }
 }
