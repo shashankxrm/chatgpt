@@ -17,7 +17,7 @@ export interface IMessage extends Document {
   attachments?: IAttachedFile[];
   timestamp: Date;
   tokenCount?: number;
-  model?: string;
+  aiModel?: string;
   isEdited?: boolean;
   editedAt?: Date;
 }
@@ -77,7 +77,7 @@ const MessageSchema = new Schema<IMessage>({
     type: Number,
     min: 0
   },
-  model: {
+  aiModel: {
     type: String,
     trim: true
   },

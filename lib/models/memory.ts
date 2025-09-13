@@ -45,8 +45,7 @@ const MemorySchema = new Schema<IMemory>({
   conversationId: {
     type: String,
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   summary: {
     type: String,
@@ -97,7 +96,7 @@ MemorySchema.methods.addKeyPoint = function(key: string, value: string, importan
   
   // Keep only top 20 most important key points
   if (this.keyPoints.length > 20) {
-    this.keyPoints.sort((a, b) => b.importance - a.importance);
+    this.keyPoints.sort((a: IMemoryItem, b: IMemoryItem) => b.importance - a.importance);
     this.keyPoints = this.keyPoints.slice(0, 20);
   }
 };
@@ -105,15 +104,15 @@ MemorySchema.methods.addKeyPoint = function(key: string, value: string, importan
 // Method to get context for AI
 MemorySchema.methods.getContext = function(): string {
   const importantPoints = this.keyPoints
-    .filter(point => point.importance >= 7)
-    .sort((a, b) => b.importance - a.importance)
+    .filter((point: IMemoryItem) => point.importance >= 7)
+    .sort((a: IMemoryItem, b: IMemoryItem) => b.importance - a.importance)
     .slice(0, 10);
   
   let context = `Conversation Summary: ${this.summary}\n\n`;
   
   if (importantPoints.length > 0) {
     context += 'Key Context:\n';
-    importantPoints.forEach(point => {
+    importantPoints.forEach((point: IMemoryItem) => {
       context += `- ${point.key}: ${point.value}\n`;
     });
   }

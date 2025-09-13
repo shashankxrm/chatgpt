@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
         conversationId: conversation._id,
         role: 'assistant',
         content: response.content,
-        model: response.model,
+        aiModel: response.model,
         tokenCount: response.usage?.totalTokens
       });
       await assistantMessage.save();
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
         role: 'assistant',
         timestamp: new Date().toISOString(),
         conversation_id: conversation._id,
-        model: response.model,
+        aiModel: response.model,
         usage: response.usage,
         context: {
           tokensUsed: contextResult.tokensUsed,

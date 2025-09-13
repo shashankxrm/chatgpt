@@ -3,6 +3,7 @@ import { generateChatResponse } from './ai/vercel-ai';
 
 export interface ContextConfig {
   maxTokens: number;
+  recommendedTokens: number;
   model: string;
   systemPrompt?: string;
   preserveRecentMessages: number;
@@ -67,6 +68,7 @@ export function getContextConfig(model: string): ContextConfig {
 
   return {
     maxTokens: modelConfig.maxTokens,
+    recommendedTokens: modelConfig.recommendedTokens,
     model,
     systemPrompt: 'You are a helpful AI assistant. You can help with various tasks including answering questions, providing explanations, and assisting with problem-solving. Be helpful, accurate, and concise in your responses.',
     preserveRecentMessages: 10, // Always keep last 10 messages
@@ -243,8 +245,15 @@ export async function getConversationContext(
       };
     }
 
+    // Convert to the expected format
+    const formattedMessages = messages.map(msg => ({
+      content: msg.content,
+      role: msg.role,
+      timestamp: msg.timestamp
+    }));
+
     // Manage context
-    return await manageContext(messages, model);
+    return await manageContext(formattedMessages, model);
   } catch (error) {
     console.error('Error getting conversation context:', error);
     throw new Error('Failed to get conversation context');

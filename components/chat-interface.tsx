@@ -42,11 +42,6 @@ export function ChatInterface() {
   // Note: Conversation state available for future sidebar integration
   const [, setConversations] = useState<Conversation[]>([])
 
-  // Load conversations on component mount
-  useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
-
   // Load conversations from API
   const loadConversations = useCallback(async () => {
     try {
@@ -60,6 +55,11 @@ export function ChatInterface() {
       console.error('Error loading conversations:', error);
     }
   }, []);
+
+  // Load conversations on component mount
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
 
   // Note: Conversation management functions are available but not used in current UI
   // They can be integrated with sidebar components when needed

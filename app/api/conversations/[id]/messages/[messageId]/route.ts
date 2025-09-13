@@ -61,7 +61,7 @@ export async function PUT(
           conversationId: conversationId,
           role: 'assistant',
           content: aiResponse.content,
-          model: aiResponse.model,
+          aiModel: aiResponse.model,
           tokenCount: aiResponse.usage?.totalTokens
         });
         await assistantMessage.save();
@@ -71,7 +71,7 @@ export async function PUT(
           content: assistantMessage.content,
           role: 'assistant',
           timestamp: assistantMessage.timestamp,
-          model: assistantMessage.model
+          model: assistantMessage.aiModel
         };
       } catch (aiError) {
         console.error("Error regenerating AI response:", aiError);

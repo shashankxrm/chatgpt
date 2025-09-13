@@ -40,7 +40,7 @@ export async function GET(
         content: msg.content,
         timestamp: msg.timestamp,
         attachments: msg.attachments || [],
-        model: msg.model,
+        model: msg.aiModel,
         isEdited: msg.isEdited || false,
         editedAt: msg.editedAt
       }))
