@@ -200,34 +200,86 @@ export function ChatInterface({ currentConversationId, onConversationCreated }: 
     }
   }, [currentConversationId])
 
-  const handleRegenerateResponse = useCallback(
-    (messageId: string) => {
-      const messageIndex = messages.findIndex((m) => m.id === messageId)
-      if (messageIndex === -1) return
+  const handleDeleteMessage = useCallback(async (messageId: string) => {
+    if (!currentConversationId) return;
 
-      // Remove the message and all subsequent messages
-      setMessages((prev) => prev.slice(0, messageIndex))
+    try {
+      const response = await fetch(`/api/conversations/${currentConversationId}/messages/${messageId}`, {
+        method: 'DELETE',
+      });
 
-      setIsLoading(true)
-      setTimeout(() => {
-        const responses = [
-          "Here's a regenerated response with different content. This simulates how ChatGPT can provide alternative answers to the same question.",
-          "This is an alternative response to your previous message. In the real ChatGPT, this would be a completely new AI-generated answer.",
-          "Regenerated! This demonstrates how you can get different perspectives on the same topic by regenerating responses.",
-        ]
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
 
-        const assistantMessage: Message = {
-          id: Date.now().toString(),
-          content: responses[Math.floor(Math.random() * responses.length)],
-          role: "assistant",
-          timestamp: new Date(),
-        }
-        setMessages((prev) => [...prev, assistantMessage])
+      // Remove the message from the UI
+      setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    }
+  }, [currentConversationId])
+
+  const handleRegenerateResponse = useCallback(async (messageId: string) => {
+    if (!currentConversationId) return;
+
+    const messageIndex = messages.findIndex((m) => m.id === messageId)
+    if (messageIndex === -1) return
+
+    // Remove the message and all subsequent messages
+    setMessages((prev) => prev.slice(0, messageIndex))
+    setIsLoading(true)
+
+    try {
+      // Get the user message that we want to regenerate the response for
+      const userMessage = messages[messageIndex - 1]
+      if (!userMessage || userMessage.role !== 'user') {
         setIsLoading(false)
-      }, 1500)
-    },
-    [messages],
-  )
+        return
+      }
+
+      // Call the chat API to regenerate the response
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage.content,
+          conversationId: currentConversationId,
+          stream: false,
+          regenerate: true // Flag to indicate this is a regeneration
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      // Add the regenerated response
+      const assistantMessage: Message = {
+        id: data.id,
+        content: data.content,
+        role: "assistant",
+        timestamp: new Date(data.timestamp),
+        model: data.aiModel
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+    } catch (error) {
+      console.error('Error regenerating response:', error)
+      // Add error message
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: "Sorry, I couldn't regenerate the response. Please try again.",
+        role: "assistant",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [messages, currentConversationId])
 
   const handleExampleClick = useCallback(
     (prompt: string) => {
@@ -305,6 +357,7 @@ export function ChatInterface({ currentConversationId, onConversationCreated }: 
             isLoading={isLoading}
             onEditMessage={handleEditMessage}
             onRegenerateResponse={handleRegenerateResponse}
+            onDeleteMessage={handleDeleteMessage}
           />
         </div>
       )}

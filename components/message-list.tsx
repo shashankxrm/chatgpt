@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Copy, ThumbsUp, ThumbsDown, RotateCcw, Share, Edit3, Check, X } from "lucide-react"
+import { Copy, ThumbsUp, ThumbsDown, RotateCcw, Share, Edit3, Check, X, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Message {
@@ -15,6 +15,9 @@ interface Message {
   role: "user" | "assistant"
   timestamp: Date
   isEditing?: boolean
+  isEdited?: boolean
+  editedAt?: Date
+  model?: string
 }
 
 interface MessageListProps {
@@ -22,9 +25,10 @@ interface MessageListProps {
   isLoading: boolean
   onEditMessage?: (messageId: string, newContent: string) => void
   onRegenerateResponse?: (messageId: string) => void
+  onDeleteMessage?: (messageId: string) => void
 }
 
-export function MessageList({ messages, isLoading, onEditMessage, onRegenerateResponse }: MessageListProps) {
+export function MessageList({ messages, isLoading, onEditMessage, onRegenerateResponse, onDeleteMessage }: MessageListProps) {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -62,6 +66,12 @@ export function MessageList({ messages, isLoading, onEditMessage, onRegenerateRe
   const cancelEdit = () => {
     setEditingMessageId(null)
     setEditContent("")
+  }
+
+  const handleDeleteMessage = (messageId: string) => {
+    if (onDeleteMessage) {
+      onDeleteMessage(messageId)
+    }
   }
 
   const handleEditKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -130,6 +140,11 @@ export function MessageList({ messages, isLoading, onEditMessage, onRegenerateRe
                     >
                       <div className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap text-balance break-words">
                         {message.content}
+                        {message.isEdited && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+                            (edited)
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -183,15 +198,26 @@ export function MessageList({ messages, isLoading, onEditMessage, onRegenerateRe
                         </>
                       )}
                       {message.role === "user" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          onClick={() => startEditing(message)}
-                          aria-label="Edit message"
-                        >
-                          <Edit3 className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </Button>
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            onClick={() => startEditing(message)}
+                            aria-label="Edit message"
+                          >
+                            <Edit3 className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
+                            onClick={() => handleDeleteMessage(message.id)}
+                            aria-label="Delete message"
+                          >
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   )}
