@@ -1,10 +1,11 @@
-import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
+import { analyzeImage, generateImageContext, VisionAnalysis } from './ai/vision';
 
 export interface ProcessedFileContent {
   text?: string;
   metadata?: Record<string, unknown>;
   error?: string;
+  visionAnalysis?: VisionAnalysis;
 }
 
 /**
@@ -12,20 +13,74 @@ export interface ProcessedFileContent {
  */
 export async function extractPdfText(buffer: Buffer): Promise<ProcessedFileContent> {
   try {
-    const data = await pdfParse(buffer);
+    // For now, let's provide basic PDF analysis without pdf-parse
+    // This avoids the module loading issues
+    
+    // Basic PDF header check
+    const header = buffer.toString('ascii', 0, 8);
+    if (!header.startsWith('%PDF-')) {
+      return {
+        error: 'Not a valid PDF file'
+      };
+    }
+    
+    // Try to extract basic info from PDF structure
+    const pdfContent = buffer.toString('ascii');
+    
+    // Look for common PDF metadata patterns
+    const titleMatch = pdfContent.match(/\/Title\s*\(([^)]+)\)/);
+    const authorMatch = pdfContent.match(/\/Author\s*\(([^)]+)\)/);
+    const creatorMatch = pdfContent.match(/\/Creator\s*\(([^)]+)\)/);
+    const subjectMatch = pdfContent.match(/\/Subject\s*\(([^)]+)\)/);
+    
+    const metadata: Record<string, unknown> = {
+      size: buffer.length,
+      type: 'application/pdf',
+      hasValidHeader: true
+    };
+    
+    if (titleMatch) metadata.title = titleMatch[1];
+    if (authorMatch) metadata.author = authorMatch[1];
+    if (creatorMatch) metadata.creator = creatorMatch[1];
+    if (subjectMatch) metadata.subject = subjectMatch[1];
+    
+    // Try to extract some text using simple pattern matching
+    // This is a basic approach - for production, you'd want a proper PDF parser
+    const textMatches = pdfContent.match(/BT\s+.*?ET/gs);
+    let extractedText = '';
+    
+    if (textMatches) {
+      extractedText = textMatches
+        .map(match => {
+          // Extract text between Tj and TJ operators
+          const textMatch = match.match(/\((.*?)\)\s*Tj/g);
+          return textMatch ? textMatch.map(t => t.replace(/^\(|\)\s*Tj$/g, '')).join(' ') : '';
+        })
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
     
     return {
-      text: data.text,
+      text: extractedText || 'PDF file detected. Content extraction is limited - this appears to be a valid PDF but text extraction requires advanced parsing.',
       metadata: {
-        pages: data.numpages,
-        info: data.info,
-        version: data.version
+        ...metadata,
+        hasExtractedText: !!extractedText && extractedText.length > 0,
+        extractionMethod: 'basic_pattern_matching'
       }
     };
+    
   } catch (error) {
     console.error('PDF extraction error:', error);
+    
     return {
-      error: 'Failed to extract text from PDF'
+      text: 'PDF file detected but content extraction failed. This might be an image-based PDF or have security restrictions.',
+      metadata: {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        size: buffer.length,
+        type: 'application/pdf'
+      },
+      error: 'Text extraction failed - PDF may be image-based or protected'
     };
   }
 }
@@ -154,9 +209,9 @@ export async function extractJsonContent(buffer: Buffer): Promise<ProcessedFileC
 }
 
 /**
- * Extract metadata from image files (basic info)
+ * Extract metadata and analyze image files with AI
  */
-export async function extractImageMetadata(buffer: Buffer, mimeType: string): Promise<ProcessedFileContent> {
+export async function extractImageMetadata(buffer: Buffer, mimeType: string, filename: string, cloudinaryUrl?: string): Promise<ProcessedFileContent> {
   try {
     // Basic image metadata
     const metadata = {
@@ -165,15 +220,35 @@ export async function extractImageMetadata(buffer: Buffer, mimeType: string): Pr
       format: mimeType.split('/')[1]
     };
 
-    // For now, we'll just return basic info
-    // In a full implementation, you might use libraries like 'sharp' or 'jimp'
-    // to extract EXIF data, dimensions, etc.
-    
-    const readableText = `Image file (${metadata.format.toUpperCase()}) - ${(buffer.length / 1024 / 1024).toFixed(2)}MB`;
+    let readableText = `Image file (${metadata.format.toUpperCase()}) - ${(buffer.length / 1024 / 1024).toFixed(2)}MB`;
+    let visionAnalysis: VisionAnalysis | undefined;
+
+    // If we have a Cloudinary URL, perform AI analysis
+    if (cloudinaryUrl) {
+      try {
+        console.log(`🔍 Analyzing image with AI: ${filename}`);
+        visionAnalysis = await analyzeImage(cloudinaryUrl);
+        
+        if (visionAnalysis && !visionAnalysis.error) {
+          readableText = generateImageContext(visionAnalysis, filename);
+        } else {
+          readableText += `\n[AI Analysis: ${visionAnalysis?.error || 'Failed to analyze image'}]`;
+        }
+      } catch (error) {
+        console.warn('AI image analysis failed:', error);
+        readableText += `\n[AI Analysis: Failed - ${error instanceof Error ? error.message : 'Unknown error'}]`;
+      }
+    } else {
+      readableText += '\n[AI Analysis: Not available - no Cloudinary URL]';
+    }
 
     return {
       text: readableText,
-      metadata
+      metadata: {
+        ...metadata,
+        hasVisionAnalysis: !!visionAnalysis && !visionAnalysis.error
+      },
+      visionAnalysis
     };
   } catch (error) {
     console.error('Image metadata extraction error:', error);
@@ -189,7 +264,8 @@ export async function extractImageMetadata(buffer: Buffer, mimeType: string): Pr
 export async function processFileContent(
   buffer: Buffer, 
   mimeType: string, 
-  filename: string
+  filename: string,
+  cloudinaryUrl?: string
 ): Promise<ProcessedFileContent> {
   try {
     console.log(`🔄 Processing file: ${filename} (${mimeType})`);
@@ -217,7 +293,7 @@ export async function processFileContent(
       
       default:
         if (mimeType.startsWith('image/')) {
-          return await extractImageMetadata(buffer, mimeType);
+          return await extractImageMetadata(buffer, mimeType, filename, cloudinaryUrl);
         }
         
         if (mimeType.startsWith('text/')) {
