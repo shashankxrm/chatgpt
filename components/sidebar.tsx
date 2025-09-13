@@ -78,6 +78,9 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
     messageCount: conv.messageCount
   }))
 
+  // Use real conversations
+  const allConversations = chatHistory
+
   const handleNewChat = () => {
     if (onNewChat) {
       onNewChat()
@@ -183,19 +186,19 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
         </div>
 
         {!isCollapsed && (
-          <ScrollArea className="flex-1 px-3" aria-label="Chat history">
-            <div className="space-y-1">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-2">Recent</div>
+          <ScrollArea className="flex-1 px-3 h-0" aria-label="Chat history">
+            <div className="space-y-1 pb-4">
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-2 sticky top-0 bg-gray-50 dark:bg-gray-800 z-10">Recent</div>
               {isLoading ? (
                 <div className="flex items-center justify-center p-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400">Loading conversations...</div>
                 </div>
-              ) : chatHistory.length === 0 ? (
+              ) : allConversations.length === 0 ? (
                 <div className="flex items-center justify-center p-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400">No conversations yet</div>
                 </div>
               ) : (
-                chatHistory.map((chat) => (
+                allConversations.map((chat) => (
                   <div key={chat.id} className="group relative">
                     {editingChatId === chat.id ? (
                       <div className="flex items-center gap-2 p-2">
