@@ -65,15 +65,15 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           >
             Log in
           </Button>
-          <Button
+          {/* <Button
             variant="outline"
-            className="border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg bg-transparent"
+            className="border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg bg-transparent sm:hidden"
             onClick={() => setShowSignup(true)}
           >
             Sign up for free
-          </Button>
+          </Button> */}
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="rounded-full">
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => window.open("https:github.com/shashankxrm/chatgpt/readme.md", "_blank")}>
             <HelpCircle className="h-5 w-5" />
           </Button>
         </div>

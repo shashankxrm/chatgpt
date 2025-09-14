@@ -244,7 +244,7 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
               <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
 
-            <Button
+            {/* <Button
               type="button"
               variant="ghost"
               size="sm"
@@ -254,7 +254,7 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
               disabled={disabled}
             >
               <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </Button>
+            </Button> */}
           </div>
 
           <Textarea
@@ -264,14 +264,14 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
             onKeyDown={handleKeyDown}
             placeholder="Message ChatGPT"
             disabled={disabled}
-            className="flex-1 min-h-[20px] max-h-[120px] sm:max-h-[200px] resize-none border-0 bg-transparent p-0 text-sm sm:text-base leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+            className="flex-1 min-h-[20px] max-h-[120px] sm:max-h-[200px] resize-none border-0 bg-transparent p-0 text-sm sm:text-base leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500 dark:placeholder:text-gray-400 pb-1 pl-1"
             rows={1}
             aria-label="Message input"
             aria-describedby="input-help"
           />
 
           <div className="flex items-center gap-0.5 sm:gap-1">
-            <Button
+            {/* <Button
               type="button"
               variant="ghost"
               size="sm"
@@ -288,7 +288,7 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
               ) : (
                 <Mic className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               )}
-            </Button>
+            </Button> */}
 
             {(message.trim() || attachedFiles.length > 0) && (
               <Button
