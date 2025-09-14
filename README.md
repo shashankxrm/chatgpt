@@ -38,6 +38,15 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
 - **Smooth Animations**: Polished interactions and transitions
 - **Accessibility**: Full keyboard navigation and screen reader support
 
+### 🔗 **Webhook System**
+- **Real-time Events**: Webhook notifications for all major actions
+- **File Processing Events**: Notifications for file upload, processing, and errors
+- **Chat Events**: Message sent, conversation created, memory updated events
+- **Security**: HMAC-SHA256 signature verification for webhook security
+- **Retry Logic**: Automatic retry with exponential backoff
+- **Testing**: Built-in webhook testing endpoints
+- **Integration Ready**: Easy integration with external services and monitoring tools
+
 ### 🔧 **Developer Features**
 - **TypeScript**: Full type safety and better development experience
 - **API Routes**: RESTful API design with proper error handling
@@ -71,6 +80,8 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
    ```bash
    cp .env.example .env.local
    ```
+   
+   📋 **Detailed setup guide**: See [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) for complete configuration instructions.
 
 4. **Configure environment variables**
    ```env
@@ -84,6 +95,10 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
    CLOUDINARY_CLOUD_NAME=your_cloud_name
    CLOUDINARY_API_KEY=your_api_key
    CLOUDINARY_API_SECRET=your_api_secret
+   
+   # Webhooks (Optional)
+   WEBHOOK_URL=https://webhook.site/your-unique-id
+   WEBHOOK_SECRET=your_webhook_secret_key
    ```
 
 5. **Start development server**
@@ -131,6 +146,11 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
 - `GET /api/memories/[conversationId]` - Get conversation memory
 - `DELETE /api/memories/[conversationId]` - Delete conversation memory
 
+### Webhooks
+- `POST /api/webhooks` - Main webhook endpoint (receives events)
+- `GET /api/webhooks` - Webhook health check
+- `POST /api/webhooks/test` - Test webhook endpoint
+
 ## 🎯 Key Features Deep Dive
 
 ### Memory System
@@ -153,6 +173,15 @@ Smart conversation context handling:
 - Message trimming for long conversations
 - Conversation summarization
 - Memory-enhanced responses
+
+### Webhook System
+Real-time event notifications for external integrations:
+- **File Events**: `file.uploaded`, `file.processed`, `file.failed`
+- **Chat Events**: `message.sent`, `conversation.created`, `memory.updated`
+- **System Events**: `system.health`, `system.test`
+- **Security**: HMAC-SHA256 signature verification
+- **Reliability**: Automatic retry with exponential backoff
+- **Testing**: Built-in test endpoints for development
 
 ## 🚀 Deployment
 
@@ -185,6 +214,21 @@ npm run build
 
 # Start production server
 npm start
+```
+
+### Webhook Testing
+
+```bash
+# Test webhook health
+curl http://localhost:3000/api/webhooks
+
+# Test webhook endpoint
+curl -X POST http://localhost:3000/api/webhooks/test \
+  -H "Content-Type: application/json" \
+  -d '{"type": "file.processing", "event": "file.uploaded", "filename": "test.pdf"}'
+
+# Generate webhook secret
+node scripts/generate-webhook-secret.js
 ```
 
 ## 📊 Performance

@@ -4,6 +4,7 @@ import { connectDB, Conversation, Message } from "@/lib/models"
 import { getConversationContext } from "@/lib/context-manager"
 import { getMemoryContext, processConversationMemory } from "@/lib/memory-manager"
 import { processFileContent } from "@/lib/file-processing"
+import { sendFileProcessingWebhook, sendChatWebhook } from "@/lib/webhook-utils"
 
 interface AttachedFile {
   id: string
@@ -76,6 +77,31 @@ export async function POST(request: NextRequest) {
             hasError: !!processedContent.error,
             error: processedContent.error
           });
+          
+          // Send file processing webhook
+          if (process.env.WEBHOOK_URL) {
+            if (processedContent.error) {
+              sendFileProcessingWebhook(process.env.WEBHOOK_URL, "file.failed", {
+                filename: attachment.name,
+                size: attachment.size,
+                type: attachment.type,
+                url: attachment.url,
+                error: processedContent.error
+              }).catch(error => {
+                console.warn("Failed to send file failed webhook:", error);
+              });
+            } else {
+              sendFileProcessingWebhook(process.env.WEBHOOK_URL, "file.processed", {
+                filename: attachment.name,
+                size: attachment.size,
+                type: attachment.type,
+                url: attachment.url,
+                processedContent: processedContent.text
+              }).catch(error => {
+                console.warn("Failed to send file processed webhook:", error);
+              });
+            }
+          }
           
           if (processedContent.error) {
             fileContext += `\n[File: ${attachment.name} - Error: ${processedContent.error}]`;
@@ -183,6 +209,18 @@ export async function POST(request: NextRequest) {
       }))
     });
     await userMessage.save();
+
+    // Send webhook for message sent
+    if (process.env.WEBHOOK_URL) {
+      sendChatWebhook(process.env.WEBHOOK_URL, "message.sent", {
+        messageId: userMessage._id.toString(),
+        conversationId: conversation._id.toString(),
+        content: message,
+        attachments: attachments
+      }).catch(error => {
+        console.warn("Failed to send message webhook:", error);
+      });
+    }
 
     if (stream) {
       // Return streaming response using Vercel AI SDK compatible approach
