@@ -17,6 +17,7 @@ export function ChatApp() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [refreshSidebar, setRefreshSidebar] = useState(0) // Trigger for sidebar refresh
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false) // Mobile sidebar state
 
   // Load conversations from API
   const loadConversations = useCallback(async () => {
@@ -40,11 +41,15 @@ export function ChatApp() {
   // Handle new chat
   const handleNewChat = useCallback(() => {
     setCurrentConversationId(null)
+    // Close sidebar on mobile after new chat
+    setIsSidebarOpen(false)
   }, [])
 
   // Handle conversation selection
   const handleSelectConversation = useCallback((conversationId: string) => {
     setCurrentConversationId(conversationId || null)
+    // Close sidebar on mobile after selection
+    setIsSidebarOpen(false)
   }, [])
 
   // Handle conversation created (called from chat interface)
@@ -64,15 +69,44 @@ export function ChatApp() {
       role="application"
       aria-label="ChatGPT Interface"
     >
-      <Sidebar 
-        currentConversationId={currentConversationId}
-        conversations={conversations}
-        onNewChat={handleNewChat}
-        onSelectConversation={handleSelectConversation}
-        onRefresh={handleRefreshSidebar}
-      />
+      {/* Desktop Sidebar - Always visible on desktop */}
+      <div className="hidden md:block">
+        <Sidebar 
+          currentConversationId={currentConversationId}
+          conversations={conversations}
+          onNewChat={handleNewChat}
+          onSelectConversation={handleSelectConversation}
+          onRefresh={handleRefreshSidebar}
+        />
+      </div>
+
+      {/* Mobile Sidebar - Overlay when open */}
+      {isSidebarOpen && (
+        <>
+          {/* Backdrop with blur effect */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+          {/* Mobile Sidebar */}
+          <div className="fixed inset-y-0 left-0 w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-50 md:hidden">
+            <Sidebar 
+              currentConversationId={currentConversationId}
+              conversations={conversations}
+              onNewChat={handleNewChat}
+              onSelectConversation={handleSelectConversation}
+              onRefresh={handleRefreshSidebar}
+              isMobile={true}
+            />
+          </div>
+        </>
+      )}
+
+      {/* Main Content Area */}
       <div className="flex flex-col flex-1 min-w-0 min-h-0">
-        <Header />
+        <Header 
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
         <div className="flex-1 min-h-0 overflow-hidden">
           <ChatInterface 
             currentConversationId={currentConversationId}

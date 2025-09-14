@@ -36,6 +36,7 @@ interface SidebarProps {
   onNewChat?: () => void
   onSelectConversation?: (conversationId: string) => void
   onRefresh?: () => void
+  isMobile?: boolean
 }
 
 interface Conversation {
@@ -46,7 +47,7 @@ interface Conversation {
   messageCount: number
 }
 
-export function Sidebar({ currentConversationId, conversations = [], onNewChat, onSelectConversation, onRefresh }: SidebarProps) {
+export function Sidebar({ currentConversationId, conversations = [], onNewChat, onSelectConversation, onRefresh, isMobile = false }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [editingChatId, setEditingChatId] = useState<string | null>(null)
@@ -157,23 +158,26 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
       <div
         className={cn(
           "flex flex-col bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 h-screen",
-          isCollapsed ? "w-16" : "w-64 md:w-80",
+          isMobile ? "w-80" : isCollapsed ? "w-16" : "w-64 md:w-80",
         )}
         role="navigation"
         aria-label="Chat navigation"
       >
         <div className="p-3">
-          <Button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            variant="ghost"
-            size="icon"
-            className="mb-3"
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
+          {/* Collapse button - hidden on mobile */}
+          {!isMobile && (
+            <Button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              variant="ghost"
+              size="icon"
+              className="mb-3"
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </Button>
+          )}
 
-          {!isCollapsed && (
+          {(!isCollapsed || isMobile) && (
             <Button
               className="w-full justify-start gap-2 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600 transition-colors"
               onClick={handleNewChat}

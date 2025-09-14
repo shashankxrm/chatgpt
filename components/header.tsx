@@ -3,11 +3,15 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { ChevronDown, HelpCircle } from "lucide-react"
+import { ChevronDown, HelpCircle, Menu } from "lucide-react"
 import { LoginModal } from "@/components/auth/login-modal"
 import { SignupModal } from "@/components/auth/signup-modal"
 
-export function Header() {
+interface HeaderProps {
+  onToggleSidebar?: () => void
+}
+
+export function Header({ onToggleSidebar }: HeaderProps) {
   const [showLogin, setShowLogin] = useState(false)
   const [showSignup, setShowSignup] = useState(false)
 
@@ -24,7 +28,19 @@ export function Header() {
   return (
     <>
       <header className="flex-shrink-0 h-14 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <div className="flex items-center">
+        <div className="flex items-center gap-3">
+          {/* Mobile Hamburger Menu */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={onToggleSidebar}
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          
+          {/* ChatGPT Title */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2 text-lg font-semibold">
