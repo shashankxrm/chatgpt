@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "highlight.js/styles/github.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -119,4 +120,66 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Dark mode syntax highlighting */
+.dark .hljs {
+  background: #1e1e1e !important;
+  color: #d4d4d4 !important;
+}
+
+.dark .hljs-comment,
+.dark .hljs-quote {
+  color: #6a9955 !important;
+}
+
+.dark .hljs-variable,
+.dark .hljs-template-variable,
+.dark .hljs-tag,
+.dark .hljs-name,
+.dark .hljs-selector-id,
+.dark .hljs-selector-class,
+.dark .hljs-regexp,
+.dark .hljs-deletion {
+  color: #f44747 !important;
+}
+
+.dark .hljs-number,
+.dark .hljs-built_in,
+.dark .hljs-builtin-name,
+.dark .hljs-literal,
+.dark .hljs-type,
+.dark .hljs-params,
+.dark .hljs-meta,
+.dark .hljs-link {
+  color: #b5cea8 !important;
+}
+
+.dark .hljs-attribute {
+  color: #9cdcfe !important;
+}
+
+.dark .hljs-string,
+.dark .hljs-symbol,
+.dark .hljs-bullet,
+.dark .hljs-addition {
+  color: #ce9178 !important;
+}
+
+.dark .hljs-title,
+.dark .hljs-section {
+  color: #dcdcaa !important;
+}
+
+.dark .hljs-keyword,
+.dark .hljs-selector-tag {
+  color: #569cd6 !important;
+}
+
+.dark .hljs-emphasis {
+  font-style: italic;
+}
+
+.dark .hljs-strong {
+  font-weight: bold;
 }
