@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { connectDB, Conversation, Message } from "@/lib/models"
+import { connectDB, Conversation, Message, Memory } from "@/lib/models"
 
 // GET /api/conversations - Get all conversations
 export async function GET() {
@@ -86,20 +86,31 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE /api/conversations - Delete all conversations (for testing)
+// DELETE /api/conversations - Delete all conversations and memories (for testing)
 export async function DELETE() {
   try {
     await connectDB();
 
     // Delete all messages first
-    await Message.deleteMany({});
+    const messageResult = await Message.deleteMany({});
+    console.log(`🗑️ Deleted ${messageResult.deletedCount} messages`);
     
-    // Then delete all conversations
-    await Conversation.deleteMany({});
+    // Delete all conversations
+    const conversationResult = await Conversation.deleteMany({});
+    console.log(`🗑️ Deleted ${conversationResult.deletedCount} conversations`);
+    
+    // Delete all memories
+    const memoryResult = await Memory.deleteMany({});
+    console.log(`🗑️ Deleted ${memoryResult.deletedCount} memories`);
 
     return NextResponse.json({
       success: true,
-      message: "All conversations deleted"
+      message: "All conversations, messages, and memories deleted",
+      deletedCounts: {
+        messages: messageResult.deletedCount,
+        conversations: conversationResult.deletedCount,
+        memories: memoryResult.deletedCount
+      }
     });
   } catch (error) {
     console.error("Error deleting conversations:", error);

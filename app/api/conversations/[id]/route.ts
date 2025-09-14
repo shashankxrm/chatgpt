@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { connectDB, Conversation, Message } from "@/lib/models"
+import { connectDB, Conversation, Message, Memory } from "@/lib/models"
 
 // GET /api/conversations/[id] - Get conversation with messages
 export async function GET(
@@ -107,7 +107,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/conversations/[id] - Delete conversation
+// DELETE /api/conversations/[id] - Delete conversation and its memories
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -118,14 +118,24 @@ export async function DELETE(
     await connectDB();
 
     // Delete all messages for this conversation
-    await Message.deleteMany({ conversationId: id });
+    const messageResult = await Message.deleteMany({ conversationId: id });
+    console.log(` Deleted ${messageResult.deletedCount} messages for conversation ${id}`);
+    
+    // Delete memories for this conversation
+    const memoryResult = await Memory.deleteMany({ conversationId: id });
+    console.log(`🗑️ Deleted ${memoryResult.deletedCount} memories for conversation ${id}`);
     
     // Delete the conversation
-    await Conversation.findByIdAndDelete(id);
+    const conversationResult = await Conversation.findByIdAndDelete(id);
 
     return NextResponse.json({
       success: true,
-      message: "Conversation deleted successfully"
+      message: "Conversation, messages, and memories deleted successfully",
+      deletedCounts: {
+        messages: messageResult.deletedCount,
+        memories: memoryResult.deletedCount,
+        conversation: conversationResult ? 1 : 0
+      }
     });
   } catch (error) {
     console.error("Error deleting conversation:", error);
