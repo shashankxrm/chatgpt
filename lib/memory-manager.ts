@@ -39,7 +39,7 @@ export async function analyzeConversationForMemory(
     // Get recent messages (last 20) for analysis
     const recentMessages = messages.slice(-20);
     
-    if (recentMessages.length < 4) {
+    if (recentMessages.length < 2) {
       return {
         shouldCreateMemory: false,
         keyPoints: [],
@@ -53,10 +53,13 @@ export async function analyzeConversationForMemory(
       .join('\n');
 
     const analysisPrompt = `Analyze this conversation and extract important information for memory. Focus on:
-1. Key facts, decisions, or important details mentioned
-2. User preferences, names, or personal information
-3. Technical information or solutions discussed
-4. Goals or objectives mentioned
+1. Personal information: names, locations, education, work, interests, goals
+2. Key facts, decisions, or important details mentioned
+3. User preferences, habits, or characteristics
+4. Technical information or solutions discussed
+5. Goals, objectives, or future plans mentioned
+
+IMPORTANT: Always create memory for personal information like names, locations, education, work, or significant life details, even if the conversation is brief.
 
 Conversation:
 ${conversationText}
@@ -64,6 +67,8 @@ ${conversationText}
 Please provide:
 1. A brief summary (1-2 sentences)
 2. Key points in format: "Key: Value" (importance 1-10, where 10 is most important)
+   - Personal info (names, locations, education) should have importance 8-10
+   - Other important details should have importance 6-9
 
 Format your response as JSON:
 {
@@ -93,16 +98,39 @@ Format your response as JSON:
       const assistantMessages = recentMessages.filter(msg => msg.role === 'assistant');
       
       if (userMessages.length > 0 && assistantMessages.length > 0) {
+        const lastUserMessage = userMessages[userMessages.length - 1].content;
+        
+        // Check for personal information patterns
+        const personalInfoPatterns = [
+          /my name is/i,
+          /i'm/i,
+          /i am/i,
+          /i live in/i,
+          /i work at/i,
+          /i study at/i,
+          /i'm pursuing/i,
+          /i'm from/i,
+          /i go to/i,
+          /university/i,
+          /college/i,
+          /school/i
+        ];
+        
+        const hasPersonalInfo = personalInfoPatterns.some(pattern => pattern.test(lastUserMessage));
+        const importance = hasPersonalInfo ? 8 : 6;
+        
         return {
           shouldCreateMemory: true,
           keyPoints: [
             {
-              key: 'Recent Discussion',
-              value: userMessages[userMessages.length - 1].content.substring(0, 100) + '...',
-              importance: 6
+              key: hasPersonalInfo ? 'Personal Information' : 'Recent Discussion',
+              value: lastUserMessage.substring(0, 100) + (lastUserMessage.length > 100 ? '...' : ''),
+              importance: importance
             }
           ],
-          suggestedSummary: `Conversation about ${userMessages[userMessages.length - 1].content.substring(0, 50)}...`
+          suggestedSummary: hasPersonalInfo 
+            ? `User shared personal information: ${lastUserMessage.substring(0, 50)}...`
+            : `Conversation about ${lastUserMessage.substring(0, 50)}...`
         };
       }
       
@@ -317,7 +345,8 @@ export async function processConversationMemory(conversationId: string): Promise
     console.log(`📋 Analysis result:`, {
       shouldCreateMemory: analysis.shouldCreateMemory,
       keyPointsCount: analysis.keyPoints.length,
-      summary: analysis.suggestedSummary.substring(0, 100) + '...'
+      summary: analysis.suggestedSummary.substring(0, 100) + '...',
+      fullAnalysis: analysis
     });
     
     if (analysis.shouldCreateMemory) {
