@@ -13,66 +13,185 @@ export interface ProcessedFileContent {
  */
 export async function extractPdfText(buffer: Buffer): Promise<ProcessedFileContent> {
   try {
-    // For now, let's provide basic PDF analysis without pdf-parse
-    // This avoids the module loading issues
+    console.log(`📄 Starting PDF extraction, buffer size: ${buffer.length} bytes`);
     
     // Basic PDF header check
     const header = buffer.toString('ascii', 0, 8);
     if (!header.startsWith('%PDF-')) {
+      console.log('❌ Invalid PDF header:', header);
       return {
         error: 'Not a valid PDF file'
       };
     }
     
-    // Try to extract basic info from PDF structure
-    const pdfContent = buffer.toString('ascii');
+    console.log('✅ Valid PDF header detected');
     
-    // Look for common PDF metadata patterns
-    const titleMatch = pdfContent.match(/\/Title\s*\(([^)]+)\)/);
-    const authorMatch = pdfContent.match(/\/Author\s*\(([^)]+)\)/);
-    const creatorMatch = pdfContent.match(/\/Creator\s*\(([^)]+)\)/);
-    const subjectMatch = pdfContent.match(/\/Subject\s*\(([^)]+)\)/);
-    
-    const metadata: Record<string, unknown> = {
-      size: buffer.length,
-      type: 'application/pdf',
-      hasValidHeader: true
-    };
-    
-    if (titleMatch) metadata.title = titleMatch[1];
-    if (authorMatch) metadata.author = authorMatch[1];
-    if (creatorMatch) metadata.creator = creatorMatch[1];
-    if (subjectMatch) metadata.subject = subjectMatch[1];
-    
-    // Try to extract some text using simple pattern matching
-    // This is a basic approach - for production, you'd want a proper PDF parser
-    const textMatches = pdfContent.match(/BT\s+.*?ET/gs);
-    let extractedText = '';
-    
-    if (textMatches) {
-      extractedText = textMatches
-        .map(match => {
-          // Extract text between Tj and TJ operators
-          const textMatch = match.match(/\((.*?)\)\s*Tj/g);
-          return textMatch ? textMatch.map(t => t.replace(/^\(|\)\s*Tj$/g, '')).join(' ') : '';
-        })
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
-    
-    return {
-      text: extractedText || 'PDF file detected. Content extraction is limited - this appears to be a valid PDF but text extraction requires advanced parsing.',
-      metadata: {
-        ...metadata,
-        hasExtractedText: !!extractedText && extractedText.length > 0,
-        extractionMethod: 'basic_pattern_matching'
+    // Try pdf-parse first
+    try {
+      console.log('🔄 Attempting pdf-parse extraction...');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pdfParse = require('pdf-parse');
+      
+      // Create a clean buffer without any test file references
+      const cleanBuffer = Buffer.from(buffer);
+      const pdfData = await pdfParse(cleanBuffer);
+      
+      console.log(`✅ pdf-parse successful: ${pdfData.text.length} characters extracted`);
+      console.log(`📄 First 200 chars: ${pdfData.text.substring(0, 200)}`);
+      
+      // Check if the extracted text is readable
+      const readableText = pdfData.text.trim();
+      const isReadable = readableText.length > 50 && 
+        /[a-zA-Z]{3,}/.test(readableText) && // Contains at least 3 consecutive letters
+        !/^[^\x20-\x7E]*$/.test(readableText); // Not all non-printable characters
+      
+      if (!isReadable) {
+        console.log('⚠️ pdf-parse extracted text but it appears to be garbled');
+        throw new Error('Extracted text is not readable');
       }
-    };
+      
+      const metadata: Record<string, unknown> = {
+        size: buffer.length,
+        type: 'application/pdf',
+        hasValidHeader: true,
+        pages: pdfData.numpages,
+        hasExtractedText: pdfData.text && pdfData.text.length > 0,
+        extractionMethod: 'pdf-parse',
+        isReadable
+      };
+      
+      // Add PDF metadata if available
+      if (pdfData.info) {
+        if (pdfData.info.Title) metadata.title = pdfData.info.Title;
+        if (pdfData.info.Author) metadata.author = pdfData.info.Author;
+        if (pdfData.info.Creator) metadata.creator = pdfData.info.Creator;
+        if (pdfData.info.Subject) metadata.subject = pdfData.info.Subject;
+      }
+      
+      return {
+        text: readableText,
+        metadata
+      };
+    } catch (pdfParseError) {
+      console.log('❌ pdf-parse failed:', pdfParseError);
+      
+      // Fallback to enhanced pattern matching
+      console.log('🔄 Attempting enhanced pattern matching...');
+      const pdfContent = buffer.toString('ascii');
+      
+      // Look for text objects more comprehensively
+      const textPatterns = [
+        { pattern: /\((.*?)\)\s*Tj/g, type: 'standard' },
+        { pattern: /\[(.*?)\]\s*TJ/g, type: 'array' },
+        { pattern: /BT\s+(.*?)\s+ET/gs, type: 'block' }
+      ];
+      
+      let extractedText = '';
+      
+      for (const { pattern, type } of textPatterns) {
+        const matches = pdfContent.match(pattern);
+        if (matches) {
+          const text = matches
+            .map(match => {
+              if (type === 'block') {
+                // Extract text from text blocks
+                const textMatches = match.match(/\((.*?)\)\s*Tj/g);
+                return textMatches ? textMatches.map(t => t.replace(/^\(|\)\s*Tj$/g, '')).join(' ') : '';
+              } else {
+                return match.replace(/^\(|\)\s*Tj$|^\[|\]\s*TJ$/g, '');
+              }
+            })
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          
+          if (text.length > extractedText.length) {
+            extractedText = text;
+          }
+        }
+      }
+      
+      // Also try to extract from stream objects
+      const streamMatches = pdfContent.match(/stream\s+(.*?)\s+endstream/gs);
+      if (streamMatches) {
+        for (const stream of streamMatches) {
+          const streamText = stream
+            .replace(/stream\s+/, '')
+            .replace(/\s+endstream/, '')
+            .replace(/[^\x20-\x7E]/g, ' ') // Keep only printable ASCII
+            .replace(/\s+/g, ' ')
+            .trim();
+          
+          if (streamText.length > 50 && streamText.length > extractedText.length) {
+            extractedText = streamText;
+          }
+        }
+      }
+      
+      console.log(`📝 Pattern matching extracted: ${extractedText.length} characters`);
+      console.log(`📄 First 200 chars: ${extractedText.substring(0, 200)}`);
+      
+      // Check if the extracted text is readable
+      const hasConsecutiveLetters = /[a-zA-Z]{3,}/.test(extractedText);
+      const hasReadableWords = /(the|and|for|are|but|not|you|all|can|had|her|was|one|our|out|day|get|has|him|his|how|its|may|new|now|old|see|two|way|who|boy|did|man|oil|sit|yes|yet|zoo)/i.test(extractedText);
+      const hasTooManySpecialChars = /[~`@#$%^&*()_+=\[\]{}|\\:";'<>?,./]{5,}/.test(extractedText);
+      const hasReasonableTextRatio = (extractedText.match(/[a-zA-Z\s]/g) || []).length / extractedText.length > 0.3; // At least 30% letters/spaces
+      
+      const isReadable = extractedText.length > 50 && 
+        hasConsecutiveLetters && 
+        (hasReadableWords || hasReasonableTextRatio) &&
+        !hasTooManySpecialChars;
+      
+      if (isReadable) {
+        return {
+          text: extractedText,
+          metadata: {
+            size: buffer.length,
+            type: 'application/pdf',
+            hasValidHeader: true,
+            hasExtractedText: true,
+            extractionMethod: 'enhanced_pattern_matching',
+            isReadable: true,
+            fallbackReason: pdfParseError instanceof Error ? pdfParseError.message : 'pdf-parse failed'
+          }
+        };
+      }
+      
+      return {
+        text: `PDF file detected but content extraction failed. This appears to be an image-based PDF, scanned document, or PDF with complex formatting that cannot be parsed as text.
+
+**What this means:**
+- The PDF contains images or scanned content rather than selectable text
+- The PDF may have security restrictions or complex encoding
+- The content is not accessible through standard text extraction methods
+
+**Suggestions:**
+- If this is a scanned document, try using OCR (Optical Character Recognition) tools
+- If this is a resume or document, consider converting it to a text-based PDF
+- For image-based PDFs, you may need to describe the content manually
+
+**File details:**
+- Size: ${(buffer.length / 1024).toFixed(1)} KB
+- Type: PDF document
+- Status: Content not readable as text`,
+        metadata: {
+          error: pdfParseError instanceof Error ? pdfParseError.message : 'Unknown error',
+          size: buffer.length,
+          type: 'application/pdf',
+          extractionMethod: 'failed',
+          isImageBased: true,
+          suggestions: [
+            'Try using OCR tools for scanned documents',
+            'Convert to text-based PDF if possible',
+            'Describe content manually if needed'
+          ]
+        },
+        error: 'Text extraction failed - PDF appears to be image-based or has complex formatting'
+      };
+    }
     
   } catch (error) {
     console.error('PDF extraction error:', error);
-    
     return {
       text: 'PDF file detected but content extraction failed. This might be an image-based PDF or have security restrictions.',
       metadata: {
@@ -257,6 +376,7 @@ export async function extractImageMetadata(buffer: Buffer, mimeType: string, fil
     };
   }
 }
+
 
 /**
  * Process file based on its type and extract relevant content

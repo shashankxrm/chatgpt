@@ -1,3 +1,13 @@
+interface HuggingFaceObjectDetection {
+  label: string;
+  score: number;
+}
+
+interface HuggingFaceClassification {
+  label: string;
+  score: number;
+}
+
 export interface VisionAnalysis {
   caption?: string;
   objects?: Array<{
@@ -77,8 +87,8 @@ export async function analyzeImage(imageUrl: string): Promise<VisionAnalysis> {
         const objectData = await objectResponse.json();
         if (Array.isArray(objectData)) {
           results.objects = objectData
-            .filter((item: any) => item.score > 0.5) // Filter low confidence detections
-            .map((item: any) => ({
+            .filter((item: HuggingFaceObjectDetection) => item.score > 0.5) // Filter low confidence detections
+            .map((item: HuggingFaceObjectDetection) => ({
               label: item.label,
               confidence: item.score,
             }))
@@ -109,7 +119,7 @@ export async function analyzeImage(imageUrl: string): Promise<VisionAnalysis> {
         if (Array.isArray(classificationData) && classificationData.length > 0) {
           results.classification = classificationData[0]
             .slice(0, 5) // Top 5 classifications
-            .map((item: any) => ({
+            .map((item: HuggingFaceClassification) => ({
               label: item.label,
               score: item.score,
             }));

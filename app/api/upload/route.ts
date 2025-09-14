@@ -80,6 +80,13 @@ export async function POST(request: NextRequest) {
           folder: 'chatgpt/uploads',
           resource_type: resourceType,
           public_id: `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+          // Ensure files are publicly accessible
+          access_mode: 'public',
+          // For raw files, ensure they're accessible
+          ...(resourceType === 'raw' && {
+            resource_type: 'raw',
+            access_mode: 'public'
+          })
         });
 
         uploadResults.push({

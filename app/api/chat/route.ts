@@ -43,10 +43,20 @@ export async function POST(request: NextRequest) {
           console.log(`🔄 Processing file: ${attachment.name} (${attachment.type})`);
           console.log(`🔗 File URL: ${attachment.url}`);
           
-          // Fetch file from Cloudinary
-          const fileResponse = await fetch(attachment.url);
+          // Handle Google Drive URLs specially
+          let fileUrl = attachment.url;
+          if (attachment.url.includes('drive.google.com/file/d/')) {
+            const fileId = attachment.url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)?.[1];
+            if (fileId) {
+              fileUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+              console.log(`🔄 Converted Google Drive URL: ${fileUrl}`);
+            }
+          }
+          
+          // Fetch file from URL
+          const fileResponse = await fetch(fileUrl);
           if (!fileResponse.ok) {
-            throw new Error(`Failed to fetch file: ${fileResponse.status}`);
+            throw new Error(`Failed to fetch file: ${fileResponse.status} - ${fileResponse.statusText}`);
           }
           
           const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
