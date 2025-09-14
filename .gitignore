@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+#md files
+.gitignore.backup
+assignment.md
+IMPLEMENTATION_PLAN.md
+SETUP.md
+WARP.md
