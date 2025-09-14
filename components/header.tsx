@@ -73,7 +73,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             Sign up for free
           </Button> */}
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => window.open("https:github.com/shashankxrm/chatgpt/readme.md", "_blank")}>
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => window.open("https://github.com/shashankxrm/chatgpt/blob/main/README.md", "_blank")}>
             <HelpCircle className="h-5 w-5" />
           </Button>
         </div>
