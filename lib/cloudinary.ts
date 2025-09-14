@@ -56,6 +56,7 @@ export async function uploadToCloudinary(
     resource_type?: 'image' | 'video' | 'raw' | 'auto';
     public_id?: string;
     transformation?: Record<string, unknown>;
+    access_mode?: string;
   } = {}
 ): Promise<UploadResult> {
   try {
@@ -66,6 +67,7 @@ export async function uploadToCloudinary(
         resource_type: options.resource_type || 'auto',
         public_id: options.public_id,
         transformation: options.transformation,
+        access_mode: options.access_mode || 'public',
         // Auto-optimize images
         quality: 'auto',
         fetch_format: 'auto',

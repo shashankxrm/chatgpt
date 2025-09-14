@@ -3,6 +3,7 @@ import { generateChatResponse, streamChatResponse, type ChatMessage } from "@/li
 import { connectDB, Conversation, Message } from "@/lib/models"
 import { getConversationContext } from "@/lib/context-manager"
 import { getMemoryContext, processConversationMemory } from "@/lib/memory-manager"
+import { processFileContent } from "@/lib/file-processing"
 
 interface AttachedFile {
   id: string
@@ -32,20 +33,68 @@ export async function POST(request: NextRequest) {
     // Connect to database
     await connectDB();
 
-    // Process attachments and extract content
+    // Process attachments and extract content with AI analysis
     let fileContext = '';
     if (attachments && attachments.length > 0) {
-      console.log(`📎 Processing ${attachments.length} attachments`);
+      console.log(`📎 Processing ${attachments.length} attachments with AI analysis`);
       
       for (const attachment of attachments) {
         try {
-          // For now, we'll just include basic file info
-          // In a full implementation, you'd fetch and process the file content
-          fileContext += `\n[Attached file: ${attachment.name} (${attachment.type})]`;
+          console.log(`🔄 Processing file: ${attachment.name} (${attachment.type})`);
+          console.log(`🔗 File URL: ${attachment.url}`);
+          
+          // Handle Google Drive URLs specially
+          let fileUrl = attachment.url;
+          if (attachment.url.includes('drive.google.com/file/d/')) {
+            const fileId = attachment.url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)?.[1];
+            if (fileId) {
+              fileUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+              console.log(`🔄 Converted Google Drive URL: ${fileUrl}`);
+            }
+          }
+          
+          // Fetch file from URL
+          const fileResponse = await fetch(fileUrl);
+          if (!fileResponse.ok) {
+            throw new Error(`Failed to fetch file: ${fileResponse.status} - ${fileResponse.statusText}`);
+          }
+          
+          const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
+          console.log(`📦 File buffer size: ${fileBuffer.length} bytes`);
+          
+          // Process file with AI analysis
+          const processedContent = await processFileContent(
+            fileBuffer,
+            attachment.type,
+            attachment.name,
+            attachment.url // Pass Cloudinary URL for AI analysis
+          );
+          
+          console.log(`📄 Processed content:`, {
+            hasText: !!processedContent.text,
+            textLength: processedContent.text?.length || 0,
+            hasError: !!processedContent.error,
+            error: processedContent.error
+          });
+          
+          if (processedContent.error) {
+            fileContext += `\n[File: ${attachment.name} - Error: ${processedContent.error}]`;
+          } else {
+            fileContext += `\n${processedContent.text}`;
+            
+            // Add vision analysis info if available
+            if (processedContent.visionAnalysis && !processedContent.visionAnalysis.error) {
+              console.log(`✅ AI analysis completed for: ${attachment.name}`);
+            }
+          }
         } catch (error) {
-          console.error('Error processing attachment:', error);
+          console.error(`Error processing attachment ${attachment.name}:`, error);
+          fileContext += `\n[File: ${attachment.name} - Processing failed: ${error instanceof Error ? error.message : 'Unknown error'}]`;
         }
       }
+      
+      console.log(`📝 Final file context length: ${fileContext.length} characters`);
+      console.log(`📝 File context preview: ${fileContext.substring(0, 200)}...`);
     }
 
     // Get conversation context with intelligent management
@@ -94,9 +143,15 @@ export async function POST(request: NextRequest) {
     messages.push(...contextResult.messages);
     
     // Add current user message
+    const fullUserMessage = message + fileContext;
+    console.log(`📝 User message length: ${message.length}`);
+    console.log(`📝 File context length: ${fileContext.length}`);
+    console.log(`📝 Full message length: ${fullUserMessage.length}`);
+    console.log(`📝 Full message preview: ${fullUserMessage.substring(0, 300)}...`);
+    
     messages.push({
       role: 'user',
-      content: message + fileContext
+      content: fullUserMessage
     });
 
     // Get or create conversation
