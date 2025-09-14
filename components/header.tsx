@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ChevronDown, HelpCircle, Menu } from "lucide-react"
 import { LoginModal } from "@/components/auth/login-modal"
 import { SignupModal } from "@/components/auth/signup-modal"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface HeaderProps {
   onToggleSidebar?: () => void
@@ -33,7 +34,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden hamburger-menu"
             onClick={onToggleSidebar}
             aria-label="Toggle sidebar"
           >
@@ -71,6 +72,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           >
             Sign up for free
           </Button>
+          <ThemeToggle />
           <Button variant="ghost" size="icon" className="rounded-full">
             <HelpCircle className="h-5 w-5" />
           </Button>

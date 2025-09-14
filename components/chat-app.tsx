@@ -85,11 +85,11 @@ export function ChatApp() {
         <>
           {/* Backdrop with blur effect */}
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-40 md:hidden mobile-sidebar-backdrop"
             onClick={() => setIsSidebarOpen(false)}
           />
           {/* Mobile Sidebar */}
-          <div className="fixed inset-y-0 left-0 w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-50 md:hidden">
+          <div className="fixed inset-y-0 left-0 w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-50 md:hidden mobile-sidebar">
             <Sidebar 
               currentConversationId={currentConversationId}
               conversations={conversations}

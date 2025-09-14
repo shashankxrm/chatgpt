@@ -26,7 +26,6 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
 
 ### 📁 **File Processing & Analysis**
 - **Multi-format Support**: PDF, DOCX, images, and text files
-- **AI Vision Analysis**: Image captioning, object detection, and classification
 - **Cloud Storage**: Secure file upload with Cloudinary integration
 - **Content Extraction**: Intelligent text extraction from documents
 - **File Context**: AI processes file content for relevant responses
@@ -39,8 +38,6 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
 - **Accessibility**: Full keyboard navigation and screen reader support
 
 ### 🔗 **Webhook System**
-- **Real-time Events**: Webhook notifications for all major actions
-- **File Processing Events**: Notifications for file upload, processing, and errors
 - **Chat Events**: Message sent, conversation created, memory updated events
 - **Security**: HMAC-SHA256 signature verification for webhook security
 - **Retry Logic**: Automatic retry with exponential backoff
@@ -53,6 +50,11 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
 - **Database Models**: Mongoose schemas for data persistence
 - **Environment Config**: Secure configuration management
 - **Linting**: ESLint for code quality and consistency
+
+### ** Extendable Features**
+- **Settings**: Options in settings dialog
+- **Authentication**: Auth using providers like google and github
+- **Personalised Content**: With Auth users can have personalised chat history rather than global chat history.
 
 ## 🚀 Quick Start
 
@@ -164,7 +166,7 @@ The app includes an intelligent memory system that:
 Advanced file handling capabilities:
 - **PDF**: Text extraction with custom parsing
 - **DOCX**: Document processing with Mammoth
-- **Images**: AI-powered analysis with multiple vision models
+- **Images**: AI-powered analysis with multiple vision models(depends upon the model we use)
 - **Text**: Direct content processing
 
 ### Context Management
@@ -175,7 +177,7 @@ Smart conversation context handling:
 - Memory-enhanced responses
 
 ### Webhook System
-Real-time event notifications for external integrations:
+Real-time event  for external integrations:
 - **File Events**: `file.uploaded`, `file.processed`, `file.failed`
 - **Chat Events**: `message.sent`, `conversation.created`, `memory.updated`
 - **System Events**: `system.health`, `system.test`
@@ -248,7 +250,7 @@ node scripts/generate-webhook-secret.js
 
 
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Next.js](https://nextjs.org/) for the amazing React framework
 - [Hugging Face](https://huggingface.co/) for AI model access
@@ -265,6 +267,6 @@ If you have any questions or need help, please:
 
 ---
 
-**Built with Shashank**
+**Built by Shashank**
 
 *This project demonstrates advanced full-stack development skills with modern web technologies and AI integration.*
