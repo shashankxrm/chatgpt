@@ -49,7 +49,29 @@ CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 3. Go to Dashboard
 4. Copy the "Cloud Name", "API Key", and "API Secret"
 
-### **4. Webhook Configuration (Optional)**
+### **4. Authentication Configuration**
+```env
+# Clerk authentication keys
+# Get these from: https://dashboard.clerk.com/
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+CLERK_SECRET_KEY=sk_test_your_secret_key_here
+
+
+# Clerk URLs (for development)
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+```
+
+**How to get Clerk credentials:**
+1. Go to [Clerk Dashboard](https://dashboard.clerk.com/)
+2. Create a new application
+3. Go to "API Keys" in the sidebar
+4. Copy the "Publishable key" and "Secret key"
+5. For development, use the test keys (they start with `pk_test_` and `sk_test_`)
+
+### **5. Webhook Configuration (Optional)**
 ```env
 # Webhook URL to receive events (optional)
 # For testing: https://webhook.site/your-unique-id
@@ -99,6 +121,14 @@ HUGGINGFACE_API_KEY=hf_abc123def456ghi789jkl012mno345pqr678stu901vwx234yz
 CLOUDINARY_CLOUD_NAME=my-cloud-name
 CLOUDINARY_API_KEY=123456789012345
 CLOUDINARY_API_SECRET=abcdefghijklmnopqrstuvwxyz123456
+
+# Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_abc123def456ghi789jkl012mno345pqr678stu901vwx234yz
+CLERK_SECRET_KEY=sk_test_abc123def456ghi789jkl012mno345pqr678stu901vwx234yz
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
 
 # Webhooks (Optional)
 WEBHOOK_URL=https://webhook.site/abc123-def456-ghi789
