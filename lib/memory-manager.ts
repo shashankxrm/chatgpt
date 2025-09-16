@@ -155,13 +155,15 @@ Format your response as JSON:
  */
 export async function createOrUpdateMemory(
   conversationId: string,
-  analysis: MemoryAnalysis
+  analysis: MemoryAnalysis,
+  userId?: string
 ): Promise<MemoryContext | null> {
   try {
     await connectDB();
 
     // Check if memory already exists
-    let memory = await Memory.findOne({ conversationId });
+    const query = userId ? { conversationId, userId } : { conversationId };
+    let memory = await Memory.findOne(query);
     
     if (memory) {
       // Update existing memory
@@ -179,6 +181,7 @@ export async function createOrUpdateMemory(
     } else {
       // Create new memory
       memory = new Memory({
+        userId: userId || 'anonymous',
         conversationId,
         summary: analysis.suggestedSummary,
         keyPoints: analysis.keyPoints.map(point => ({
@@ -219,13 +222,14 @@ export async function createOrUpdateMemory(
 /**
  * Get memory context for a conversation
  */
-export async function getMemoryContext(conversationId: string): Promise<string> {
+export async function getMemoryContext(conversationId: string, userId?: string): Promise<string> {
   try {
     await connectDB();
     
-    // If conversationId is 'general', get memories from all conversations
+    // If conversationId is 'general', get memories from all conversations for the user
     if (conversationId === 'general') {
-      const memories = await Memory.find({}).sort({ lastUpdated: -1 }).limit(5);
+      const query = userId ? { userId } : {};
+      const memories = await Memory.find(query).sort({ lastUpdated: -1 }).limit(5);
       
       if (memories.length === 0) {
         return '';
@@ -236,7 +240,8 @@ export async function getMemoryContext(conversationId: string): Promise<string> 
       return `Previous conversation memories:\n${generalContext}`;
     }
     
-    const memory = await Memory.findOne({ conversationId });
+    const query = userId ? { conversationId, userId } : { conversationId };
+    const memory = await Memory.findOne(query);
     
     if (!memory) {
       return '';
@@ -252,11 +257,12 @@ export async function getMemoryContext(conversationId: string): Promise<string> 
 /**
  * Get all memories for a user (across all conversations)
  */
-export async function getAllMemories(): Promise<MemoryContext[]> {
+export async function getAllMemories(userId?: string): Promise<MemoryContext[]> {
   try {
     await connectDB();
     
-    const memories = await Memory.find()
+    const query = userId ? { userId } : {};
+    const memories = await Memory.find(query)
       .sort({ lastUpdated: -1 })
       .limit(50)
       .lean();
@@ -279,19 +285,27 @@ export async function getAllMemories(): Promise<MemoryContext[]> {
 /**
  * Clean up old or less important memories
  */
-export async function cleanupMemories(): Promise<number> {
+export async function cleanupMemories(userId?: string): Promise<number> {
   try {
     await connectDB();
     
     // Remove memories older than 30 days with low importance
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     
-    const result = await Memory.deleteMany({
-      lastUpdated: { $lt: thirtyDaysAgo },
-      'keyPoints.importance': { $lt: 5 }
-    });
+    const query = userId 
+      ? {
+          userId,
+          lastUpdated: { $lt: thirtyDaysAgo },
+          'keyPoints.importance': { $lt: 5 }
+        }
+      : {
+          lastUpdated: { $lt: thirtyDaysAgo },
+          'keyPoints.importance': { $lt: 5 }
+        };
+    
+    const result = await Memory.deleteMany(query);
 
-    console.log(`🧹 Cleaned up ${result.deletedCount} old memories`);
+    console.log(`🧹 Cleaned up ${result.deletedCount} old memories for user ${userId || 'all'}`);
     return result.deletedCount;
   } catch (error) {
     console.error('Error cleaning up memories:', error);
@@ -314,13 +328,14 @@ function calculateMemoryTokens(memory: { summary: string; keyPoints: Array<Memor
 /**
  * Process conversation and update memory
  */
-export async function processConversationMemory(conversationId: string): Promise<void> {
+export async function processConversationMemory(conversationId: string, userId?: string): Promise<void> {
   try {
     console.log(`🔍 Processing memory for conversation: ${conversationId}`);
     await connectDB();
     
     // Get conversation messages
-    const messages = await Message.find({ conversationId })
+    const query = userId ? { conversationId, userId } : { conversationId };
+    const messages = await Message.find(query)
       .sort({ timestamp: 1 })
       .lean();
 
@@ -351,7 +366,7 @@ export async function processConversationMemory(conversationId: string): Promise
     
     if (analysis.shouldCreateMemory) {
       console.log(`💾 Creating/updating memory...`);
-      const result = await createOrUpdateMemory(conversationId, analysis);
+      const result = await createOrUpdateMemory(conversationId, analysis, userId);
       if (result) {
         console.log(`✅ Memory updated for conversation ${conversationId}:`, {
           summary: result.summary.substring(0, 50) + '...',
