@@ -1,30 +1,17 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ChevronDown, HelpCircle, Menu } from "lucide-react"
-import { LoginModal } from "@/components/auth/login-modal"
-import { SignupModal } from "@/components/auth/signup-modal"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { UserButton, useUser, SignInButton } from '@clerk/nextjs'
 
 interface HeaderProps {
   onToggleSidebar?: () => void
 }
 
 export function Header({ onToggleSidebar }: HeaderProps) {
-  const [showLogin, setShowLogin] = useState(false)
-  const [showSignup, setShowSignup] = useState(false)
-
-  const handleSwitchToSignup = () => {
-    setShowLogin(false)
-    setShowSignup(true)
-  }
-
-  const handleSwitchToLogin = () => {
-    setShowSignup(false)
-    setShowLogin(true)
-  }
+  const { isSignedIn, isLoaded } = useUser()
 
   return (
     <>
@@ -58,29 +45,33 @@ export function Header({ onToggleSidebar }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="default"
-            className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg"
-            onClick={() => setShowLogin(true)}
-          >
-            Log in
-          </Button>
-          {/* <Button
-            variant="outline"
-            className="border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg bg-transparent sm:hidden"
-            onClick={() => setShowSignup(true)}
-          >
-            Sign up for free
-          </Button> */}
+          {!isLoaded ? (
+            <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+          ) : isSignedIn ? (
+            <UserButton 
+              appearance={{
+                elements: {
+                  avatarBox: "w-8 h-8",
+                  userButtonPopoverCard: "shadow-lg",
+                }
+              }}
+            />
+          ) : (
+            <SignInButton mode="modal">
+              <Button
+                variant="default"
+                className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg"
+              >
+                Log in
+              </Button>
+            </SignInButton>
+          )}
           <ThemeToggle />
           <Button variant="ghost" size="icon" className="rounded-full" onClick={() => window.open("https://github.com/shashankxrm/chatgpt/blob/main/README.md", "_blank")}>
             <HelpCircle className="h-5 w-5" />
           </Button>
         </div>
       </header>
-
-      <LoginModal isOpen={showLogin} onClose={() => setShowLogin(false)} onSwitchToSignup={handleSwitchToSignup} />
-      <SignupModal isOpen={showSignup} onClose={() => setShowSignup(false)} onSwitchToLogin={handleSwitchToLogin} />
     </>
   )
 }
