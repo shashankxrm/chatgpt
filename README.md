@@ -7,6 +7,7 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green?style=for-the-badge&logo=mongodb)
 ![AI](https://img.shields.io/badge/AI-Hugging%20Face-yellow?style=for-the-badge&logo=huggingface)
+![Clerk](https://img.shields.io/badge/Auth-Clerk-purple?style=for-the-badge&logo=clerk)
 
 ## ✨ Features
 
@@ -51,10 +52,13 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
 - **Environment Config**: Secure configuration management
 - **Linting**: ESLint for code quality and consistency
 
-### ** Extendable Features**
-- **Settings**: Options in settings dialog
-- **Authentication**: Auth using providers like google and github
-- **Personalised Content**: With Auth users can have personalised chat history rather than global chat history.
+### 🔐 **Authentication & Security**
+- **Clerk Integration**: Modern authentication with multiple providers
+- **User Isolation**: Each user has their own private conversations and memories
+- **Secure API**: All endpoints protected with authentication middleware
+- **Session Management**: Automatic session handling and refresh
+- **Multi-Provider**: Support for Google, and email authentication
+
 
 ## 🚀 Quick Start
 
@@ -64,6 +68,7 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
 - MongoDB Atlas account
 - Cloudinary account
 - Hugging Face API key
+- Clerk account (for authentication)
 
 ### Installation
 
@@ -98,6 +103,14 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
    CLOUDINARY_API_KEY=your_api_key
    CLOUDINARY_API_SECRET=your_api_secret
    
+   # Authentication (Clerk)
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
+   CLERK_SECRET_KEY=sk_test_your_secret_key_here
+   NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+   NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+   NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+   NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+   
    # Webhooks (Optional)
    WEBHOOK_URL=https://webhook.site/your-unique-id
    WEBHOOK_SECRET=your_webhook_secret_key
@@ -108,8 +121,17 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
    npm run dev
    ```
 
-6. **Open your browser**
+6. **Set up Clerk Authentication**
+   - Go to [Clerk Dashboard](https://dashboard.clerk.com/)
+   - Create a new application
+   - Copy the publishable key and secret key
+   - Update your `.env.local` with the Clerk keys
+
+7. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
+   - You'll be redirected to sign-in if not authenticated
+   - Sign up with Google, or email
+   - Start chatting with your personalized AI assistant!
 
 ## 🏗️ Architecture
 
@@ -119,34 +141,37 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
 - **Backend**: Next.js API Routes, Node.js
 - **Database**: MongoDB with Mongoose ODM
 - **AI**: Hugging Face Inference API, Vercel AI SDK
+- **Authentication**: Clerk (Google, Email)
 - **File Storage**: Cloudinary
 - **UI Components**: Radix UI, Lucide React
 
 ## 🔧 API Endpoints
 
+> **🔐 All API endpoints require authentication** - Users must be signed in to access any functionality.
+
 ### Chat
-- `POST /api/chat` - Send message and get AI response
-- `GET /api/chat/stream` - Stream AI responses
+- `POST /api/chat` - Send message and get AI response (user-specific)
+- `GET /api/chat/stream` - Stream AI responses (user-specific)
 
 ### Conversations
-- `GET /api/conversations` - Get all conversations
-- `POST /api/conversations` - Create new conversation
-- `GET /api/conversations/[id]` - Get specific conversation
-- `PUT /api/conversations/[id]` - Update conversation
-- `DELETE /api/conversations/[id]` - Delete conversation
+- `GET /api/conversations` - Get user's conversations only
+- `POST /api/conversations` - Create new conversation for user
+- `GET /api/conversations/[id]` - Get specific conversation (if owned by user)
+- `PUT /api/conversations/[id]` - Update conversation (if owned by user)
+- `DELETE /api/conversations/[id]` - Delete conversation (if owned by user)
 
 ### Messages
-- `PUT /api/conversations/[id]/messages/[messageId]` - Edit message
-- `DELETE /api/conversations/[id]/messages/[messageId]` - Delete message
+- `PUT /api/conversations/[id]/messages/[messageId]` - Edit message (if owned by user)
+- `DELETE /api/conversations/[id]/messages/[messageId]` - Delete message (if owned by user)
 
 ### Files
-- `POST /api/upload` - Upload file to Cloudinary
-- `POST /api/process-file` - Process file content
+- `POST /api/upload` - Upload file to Cloudinary (user-specific)
+- `POST /api/process-file` - Process file content (user-specific)
 
 ### Memory
-- `GET /api/memories` - Get all memories
-- `GET /api/memories/[conversationId]` - Get conversation memory
-- `DELETE /api/memories/[conversationId]` - Delete conversation memory
+- `GET /api/memories` - Get user's memories only
+- `GET /api/memories/[conversationId]` - Get conversation memory (if owned by user)
+- `DELETE /api/memories/[conversationId]` - Delete conversation memory (if owned by user)
 
 ### Webhooks
 - `POST /api/webhooks` - Main webhook endpoint (receives events)
@@ -155,12 +180,20 @@ A full-featured ChatGPT clone built with Next.js, featuring AI-powered conversat
 
 ## 🎯 Key Features Deep Dive
 
+### Authentication & User Isolation
+The app features comprehensive user authentication and data isolation:
+- **Clerk Integration**: Modern authentication with multiple providers (Google, GitHub, Email)
+- **User Data Isolation**: Each user has completely private conversations and memories
+- **Secure API**: All endpoints protected with authentication middleware
+- **Session Management**: Automatic session handling and refresh
+- **Data Privacy**: Users can only access their own data
+
 ### Memory System
 The app includes an intelligent memory system that:
-- Extracts key points from conversations
-- Stores important context for future reference
-- Provides "general" context for new conversations
-- Automatically cleans up old memories
+- Extracts key points from conversations (user-specific)
+- Stores important context for future reference (per user)
+- Provides "general" context for new conversations (from user's history)
+- Automatically cleans up old memories (per user)
 
 ### File Processing
 Advanced file handling capabilities:
@@ -190,8 +223,29 @@ Real-time event  for external integrations:
 ### Vercel (Recommended)
 
 1. **Connect your repository to Vercel**
-2. **Set environment variables** in Vercel dashboard
+2. **Set environment variables** in Vercel dashboard:
+   - All MongoDB, Cloudinary, and Hugging Face variables
+   - **Clerk authentication variables** (publishable key, secret key, URLs)
 3. **Deploy** with automatic builds
+
+### Clerk Setup for Production
+
+1. **Create Clerk Application**:
+   - Go to [Clerk Dashboard](https://dashboard.clerk.com/)
+   - Create a new application
+   - Copy production keys (not test keys)
+
+2. **Configure Production URLs**:
+   ```env
+   NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+   NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+   NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+   NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+   ```
+
+3. **Update Environment Variables**:
+   - Replace test keys with production keys
+   - Update URLs to match your domain
 
 ### Manual Deployment
 
@@ -255,6 +309,7 @@ node scripts/generate-webhook-secret.js
 - [Next.js](https://nextjs.org/) for the amazing React framework
 - [Hugging Face](https://huggingface.co/) for AI model access
 - [Vercel AI SDK](https://sdk.vercel.ai/) for AI integration
+- [Clerk](https://clerk.com/) for modern authentication and user management
 - [Radix UI](https://www.radix-ui.com/) for accessible components(ShadCN)
 - [Tailwind CSS](https://tailwindcss.com/) for styling
 
