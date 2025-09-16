@@ -9,8 +9,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ChatGPT Clone",
-  description: "A pixel-perfect ChatGPT UI clone",
-  generator: "v0.app",
+  description: "ChatGPT Clone",
 };
 
 export default function RootLayout({
