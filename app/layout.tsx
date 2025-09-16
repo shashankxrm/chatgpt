@@ -1,22 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ClerkProvider } from '@clerk/nextjs';
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { Suspense } from "react";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ChatGPT Clone",
-  description: "ChatGPT Clone",
+  description: "A pixel-perfect ChatGPT UI clone",
+  generator: "v0.app",
 };
 
 export default function RootLayout({
@@ -27,15 +21,19 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <ThemeProvider
-            defaultTheme="system"
-            storageKey="chatgpt-theme"
-          >
-            {children}
-          </ThemeProvider>
+        <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
+          <Suspense fallback={null}>
+            <ThemeProvider
+              defaultTheme="system"
+              storageKey="chatgpt-theme"
+              attribute="class"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </Suspense>
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
