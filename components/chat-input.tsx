@@ -4,8 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Paperclip, Search, Mic, Send, Square, X, FileText, ImageIcon, File } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Paperclip, Send, X, FileText, ImageIcon, File } from "lucide-react"
 
 interface AttachedFile {
   id: string
@@ -38,7 +37,6 @@ interface ChatInputProps {
 
 export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
   const [message, setMessage] = useState("")
-  const [isRecording, setIsRecording] = useState(false)
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([])
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -186,14 +184,6 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
     return <File className="h-4 w-4" />
   }
 
-  const handleSearch = () => {
-    console.log("Search clicked")
-  }
-
-  const handleVoice = () => {
-    setIsRecording(!isRecording)
-    console.log("Voice recording:", !isRecording)
-  }
 
   return (
     <div className="max-w-3xl mx-auto w-full">
@@ -244,17 +234,6 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
               <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
 
-            {/* <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-              onClick={handleSearch}
-              aria-label="Search"
-              disabled={disabled}
-            >
-              <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </Button> */}
           </div>
 
           <Textarea
@@ -271,24 +250,7 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
           />
 
           <div className="flex items-center gap-0.5 sm:gap-1">
-            {/* <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded",
-                isRecording && "bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400",
-              )}
-              onClick={handleVoice}
-              aria-label={isRecording ? "Stop recording" : "Start voice recording"}
-              disabled={disabled}
-            >
-              {isRecording ? (
-                <Square className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              ) : (
-                <Mic className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              )}
-            </Button> */}
+            {/*  */}
 
             {(message.trim() || attachedFiles.length > 0) && (
               <Button
