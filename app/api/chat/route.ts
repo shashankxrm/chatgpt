@@ -5,6 +5,7 @@ import { getConversationContext } from "@/lib/context-manager"
 import { getMemoryContext, processConversationMemory } from "@/lib/memory-manager"
 import { processFileContent } from "@/lib/file-processing"
 import { sendFileProcessingWebhook, sendChatWebhook } from "@/lib/webhook-utils"
+import { withAuth, validateUserOwnership } from "@/lib/auth"
 
 interface AttachedFile {
   id: string
@@ -15,7 +16,7 @@ interface AttachedFile {
   cloudinaryId?: string
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, userId: string) => {
   try {
     const { 
       message, 
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
     let memoryContext = '';
     if (conversationId) {
       console.log(`🔍 Retrieving memory context for conversation: ${conversationId}`);
-      memoryContext = await getMemoryContext(conversationId);
+      memoryContext = await getMemoryContext(conversationId, userId);
       console.log(`📝 Memory context retrieved: ${memoryContext ? 'Yes' : 'No'}`);
       if (memoryContext) {
         console.log(`📄 Memory context length: ${memoryContext.length} characters`);
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
     } else {
       // For new conversations, get general memory context from all conversations
       console.log(`🔍 Retrieving general memory context for new conversation`);
-      memoryContext = await getMemoryContext('general');
+      memoryContext = await getMemoryContext('general', userId);
       console.log(`📝 General memory context retrieved: ${memoryContext ? 'Yes' : 'No'}`);
       if (memoryContext) {
         console.log(`📄 General memory context length: ${memoryContext.length} characters`);
@@ -184,10 +185,15 @@ export async function POST(request: NextRequest) {
     let conversation;
     if (conversationId) {
       conversation = await Conversation.findById(conversationId);
+      if (conversation) {
+        // Validate user ownership
+        validateUserOwnership(userId, conversation.userId);
+      }
     }
     
     if (!conversation) {
       conversation = new Conversation({
+        userId,
         title: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
         messageCount: 0
       });
@@ -196,6 +202,7 @@ export async function POST(request: NextRequest) {
 
     // Save user message
     const userMessage = new Message({
+      userId,
       conversationId: conversation._id,
       role: 'user',
       content: message,
@@ -235,6 +242,7 @@ export async function POST(request: NextRequest) {
                 if (chunk.done) {
                   // Save assistant message
                   const assistantMessage = new Message({
+                    userId,
                     conversationId: conversation._id,
                     role: 'assistant',
                     content: fullResponse,
@@ -243,7 +251,7 @@ export async function POST(request: NextRequest) {
                   await assistantMessage.save();
 
                   // Process conversation memory asynchronously (don't wait for it)
-                  processConversationMemory(conversation._id).catch(error => {
+                  processConversationMemory(conversation._id, userId).catch(error => {
                     console.error('Error processing conversation memory:', error);
                   });
                   
@@ -269,7 +277,7 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        return new Response(stream, {
+        return new NextResponse(stream, {
           headers: {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
@@ -289,6 +297,7 @@ export async function POST(request: NextRequest) {
       
       // Save assistant message
       const assistantMessage = new Message({
+        userId,
         conversationId: conversation._id,
         role: 'assistant',
         content: response.content,
@@ -299,7 +308,7 @@ export async function POST(request: NextRequest) {
 
       // Process conversation memory asynchronously (don't wait for it)
       console.log(`🧠 Processing memory for conversation: ${conversation._id}`);
-      processConversationMemory(conversation._id).then(() => {
+      processConversationMemory(conversation._id, userId).then(() => {
         console.log(`✅ Memory processed successfully for conversation: ${conversation._id}`);
       }).catch(error => {
         console.error('❌ Error processing conversation memory:', error);
@@ -332,4 +341,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+});

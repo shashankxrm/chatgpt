@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
 import { getAllMemories, cleanupMemories } from "@/lib/memory-manager"
+import { withAuth } from "@/lib/auth"
 
-// GET /api/memories - Get all memories
-export async function GET() {
+// GET /api/memories - Get all memories for authenticated user
+export const GET = withAuth(async (request, userId: string) => {
   try {
-    const memories = await getAllMemories()
+    const memories = await getAllMemories(userId)
     
     return NextResponse.json({
       success: true,
@@ -22,12 +23,12 @@ export async function GET() {
       { status: 500 }
     )
   }
-}
+});
 
-// DELETE /api/memories - Clean up old memories
-export async function DELETE() {
+// DELETE /api/memories - Clean up old memories for authenticated user
+export const DELETE = withAuth(async (request, userId: string) => {
   try {
-    const deletedCount = await cleanupMemories()
+    const deletedCount = await cleanupMemories(userId)
     
     return NextResponse.json({
       success: true,
@@ -45,4 +46,4 @@ export async function DELETE() {
       { status: 500 }
     )
   }
-}
+});

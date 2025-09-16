@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectDB, Conversation, Message, Memory } from "@/lib/models"
+import { withAuth } from "@/lib/auth"
 
-// GET /api/conversations - Get all conversations
-export async function GET() {
+// GET /api/conversations - Get all conversations for authenticated user
+export const GET = withAuth(async (request: NextRequest, userId: string) => {
   try {
     await connectDB();
 
-    const conversations = await Conversation.find()
+    const conversations = await Conversation.find({ userId })
       .sort({ updatedAt: -1 })
       .limit(50) // Limit to recent 50 conversations
       .lean();
@@ -32,10 +33,10 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
-// POST /api/conversations - Create new conversation
-export async function POST(request: NextRequest) {
+// POST /api/conversations - Create new conversation for authenticated user
+export const POST = withAuth(async (request: NextRequest, userId: string) => {
   try {
     const { title, message } = await request.json();
     
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
 
     // Create new conversation
     const conversation = new Conversation({
+      userId,
       title: title || 'New Conversation',
       messageCount: 0
     });
@@ -52,6 +54,7 @@ export async function POST(request: NextRequest) {
     // If there's an initial message, save it
     if (message) {
       const userMessage = new Message({
+        userId,
         conversationId: conversation._id,
         role: 'user',
         content: message
@@ -84,28 +87,28 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
-// DELETE /api/conversations - Delete all conversations and memories (for testing)
-export async function DELETE() {
+// DELETE /api/conversations - Delete all conversations and memories for authenticated user (for testing)
+export const DELETE = withAuth(async (request: NextRequest, userId: string) => {
   try {
     await connectDB();
 
-    // Delete all messages first
-    const messageResult = await Message.deleteMany({});
-    console.log(`🗑️ Deleted ${messageResult.deletedCount} messages`);
+    // Delete all messages for this user first
+    const messageResult = await Message.deleteMany({ userId });
+    console.log(`🗑️ Deleted ${messageResult.deletedCount} messages for user ${userId}`);
     
-    // Delete all conversations
-    const conversationResult = await Conversation.deleteMany({});
-    console.log(`🗑️ Deleted ${conversationResult.deletedCount} conversations`);
+    // Delete all conversations for this user
+    const conversationResult = await Conversation.deleteMany({ userId });
+    console.log(`🗑️ Deleted ${conversationResult.deletedCount} conversations for user ${userId}`);
     
-    // Delete all memories
-    const memoryResult = await Memory.deleteMany({});
-    console.log(`🗑️ Deleted ${memoryResult.deletedCount} memories`);
+    // Delete all memories for this user
+    const memoryResult = await Memory.deleteMany({ userId });
+    console.log(`🗑️ Deleted ${memoryResult.deletedCount} memories for user ${userId}`);
 
     return NextResponse.json({
       success: true,
-      message: "All conversations, messages, and memories deleted",
+      message: "All conversations, messages, and memories deleted for user",
       deletedCounts: {
         messages: messageResult.deletedCount,
         conversations: conversationResult.deletedCount,
@@ -123,4 +126,4 @@ export async function DELETE() {
       { status: 500 }
     );
   }
-}
+});

@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectDB, Conversation, Message, Memory } from "@/lib/models"
+import { withAuth } from "@/lib/auth"
 
-// GET /api/conversations/[id] - Get conversation with messages
-export async function GET(
+// GET /api/conversations/[id] - Get conversation with messages for authenticated user
+export const GET = withAuth(async (
   request: NextRequest,
+  userId: string,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
     
     await connectDB();
 
-    // Get conversation
-    const conversation = await Conversation.findById(id);
+    // Get conversation and validate ownership
+    const conversation = await Conversation.findOne({ _id: id, userId });
     if (!conversation) {
       return NextResponse.json(
         { error: "Conversation not found" },
@@ -21,7 +23,7 @@ export async function GET(
     }
 
     // Get messages for this conversation
-    const messages = await Message.find({ conversationId: id })
+    const messages = await Message.find({ conversationId: id, userId })
       .sort({ timestamp: 1 })
       .lean();
 
@@ -56,20 +58,21 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});
 
-// PUT /api/conversations/[id] - Update conversation (title, etc.)
-export async function PUT(
+// PUT /api/conversations/[id] - Update conversation (title, etc.) for authenticated user
+export const PUT = withAuth(async (
   request: NextRequest,
+  userId: string,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
     const { title } = await request.json();
     
     await connectDB();
 
-    const conversation = await Conversation.findById(id);
+    const conversation = await Conversation.findOne({ _id: id, userId });
     if (!conversation) {
       return NextResponse.json(
         { error: "Conversation not found" },
@@ -105,24 +108,34 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+});
 
-// DELETE /api/conversations/[id] - Delete conversation and its memories
-export async function DELETE(
+// DELETE /api/conversations/[id] - Delete conversation and its memories for authenticated user
+export const DELETE = withAuth(async (
   request: NextRequest,
+  userId: string,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
     
     await connectDB();
 
+    // Verify conversation ownership before deletion
+    const conversation = await Conversation.findOne({ _id: id, userId });
+    if (!conversation) {
+      return NextResponse.json(
+        { error: "Conversation not found" },
+        { status: 404 }
+      );
+    }
+
     // Delete all messages for this conversation
-    const messageResult = await Message.deleteMany({ conversationId: id });
-    console.log(` Deleted ${messageResult.deletedCount} messages for conversation ${id}`);
+    const messageResult = await Message.deleteMany({ conversationId: id, userId });
+    console.log(`🗑️ Deleted ${messageResult.deletedCount} messages for conversation ${id}`);
     
     // Delete memories for this conversation
-    const memoryResult = await Memory.deleteMany({ conversationId: id });
+    const memoryResult = await Memory.deleteMany({ conversationId: id, userId });
     console.log(`🗑️ Deleted ${memoryResult.deletedCount} memories for conversation ${id}`);
     
     // Delete the conversation
@@ -148,4 +161,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

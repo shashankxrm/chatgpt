@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectDB, Conversation, Message } from "@/lib/models"
 import { generateChatResponse } from "@/lib/ai/vercel-ai"
+import { withAuth } from "@/lib/auth"
 
-// PUT /api/conversations/[id]/messages/[messageId] - Edit message
-export async function PUT(
+// PUT /api/conversations/[id]/messages/[messageId] - Edit message for authenticated user
+export const PUT = withAuth(async (
   request: NextRequest,
+  userId: string,
   { params }: { params: Promise<{ id: string; messageId: string }> }
-) {
+) => {
   try {
     const { id: conversationId, messageId } = await params;
     const { content, regenerate = false } = await request.json();
     
     await connectDB();
 
-    // Get conversation
-    const conversation = await Conversation.findById(conversationId);
+    // Get conversation and validate ownership
+    const conversation = await Conversation.findOne({ _id: conversationId, userId });
     if (!conversation) {
       return NextResponse.json(
         { error: "Conversation not found" },
@@ -22,9 +24,9 @@ export async function PUT(
       );
     }
 
-    // Get the message to edit
-    const message = await Message.findById(messageId);
-    if (!message || message.conversationId !== conversationId) {
+    // Get the message to edit and validate ownership
+    const message = await Message.findOne({ _id: messageId, conversationId, userId });
+    if (!message) {
       return NextResponse.json(
         { error: "Message not found" },
         { status: 404 }
@@ -43,7 +45,7 @@ export async function PUT(
     if (regenerate && message.role === 'user') {
       try {
         // Get conversation context
-        const messages = await Message.find({ conversationId })
+        const messages = await Message.find({ conversationId, userId })
           .sort({ timestamp: 1 })
           .lean();
 
@@ -58,6 +60,7 @@ export async function PUT(
 
         // Save the new AI response
         const assistantMessage = new Message({
+          userId,
           conversationId: conversationId,
           role: 'assistant',
           content: aiResponse.content,
@@ -102,20 +105,21 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+});
 
-// DELETE /api/conversations/[id]/messages/[messageId] - Delete message
-export async function DELETE(
+// DELETE /api/conversations/[id]/messages/[messageId] - Delete message for authenticated user
+export const DELETE = withAuth(async (
   request: NextRequest,
+  userId: string,
   { params }: { params: Promise<{ id: string; messageId: string }> }
-) {
+) => {
   try {
     const { id: conversationId, messageId } = await params;
     
     await connectDB();
 
-    // Get conversation
-    const conversation = await Conversation.findById(conversationId);
+    // Get conversation and validate ownership
+    const conversation = await Conversation.findOne({ _id: conversationId, userId });
     if (!conversation) {
       return NextResponse.json(
         { error: "Conversation not found" },
@@ -123,8 +127,8 @@ export async function DELETE(
       );
     }
 
-    // Delete the message
-    const result = await Message.findByIdAndDelete(messageId);
+    // Delete the message and validate ownership
+    const result = await Message.findOneAndDelete({ _id: messageId, conversationId, userId });
     if (!result) {
       return NextResponse.json(
         { error: "Message not found" },
@@ -152,4 +156,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});
