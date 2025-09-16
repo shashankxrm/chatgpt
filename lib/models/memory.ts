@@ -9,6 +9,7 @@ export interface IMemoryItem {
 
 export interface IMemory extends Document {
   _id: string;
+  userId: string;
   conversationId: string;
   summary: string;
   keyPoints: IMemoryItem[];
@@ -42,10 +43,14 @@ const MemoryItemSchema = new Schema<IMemoryItem>({
 }, { _id: false });
 
 const MemorySchema = new Schema<IMemory>({
-  conversationId: {
+  userId: {
     type: String,
     required: true,
-    unique: true
+    index: true
+  },
+  conversationId: {
+    type: String,
+    required: true
   },
   summary: {
     type: String,
@@ -73,8 +78,8 @@ const MemorySchema = new Schema<IMemory>({
 });
 
 // Indexes for efficient queries
-MemorySchema.index({ conversationId: 1 });
-MemorySchema.index({ lastUpdated: -1 });
+MemorySchema.index({ userId: 1, conversationId: 1 }, { unique: true });
+MemorySchema.index({ userId: 1, lastUpdated: -1 });
 
 // Pre-save middleware to update version and timestamp
 MemorySchema.pre('save', function(next) {

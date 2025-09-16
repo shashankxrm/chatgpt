@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IConversation extends Document {
   _id: string;
+  userId: string;
   title: string;
   createdAt: Date;
   updatedAt: Date;
@@ -10,6 +11,11 @@ export interface IConversation extends Document {
 }
 
 const ConversationSchema = new Schema<IConversation>({
+  userId: {
+    type: String,
+    required: true,
+    index: true
+  },
   title: {
     type: String,
     required: true,
@@ -32,8 +38,8 @@ const ConversationSchema = new Schema<IConversation>({
 });
 
 // Indexes for better query performance
-ConversationSchema.index({ updatedAt: -1 });
-ConversationSchema.index({ createdAt: -1 });
+ConversationSchema.index({ userId: 1, updatedAt: -1 });
+ConversationSchema.index({ userId: 1, createdAt: -1 });
 
 // Virtual for getting messages count
 ConversationSchema.virtual('messages', {

@@ -11,6 +11,7 @@ export interface IAttachedFile {
 
 export interface IMessage extends Document {
   _id: string;
+  userId: string;
   conversationId: string;
   role: 'user' | 'assistant';
   content: string;
@@ -54,6 +55,11 @@ const AttachedFileSchema = new Schema<IAttachedFile>({
 }, { _id: false });
 
 const MessageSchema = new Schema<IMessage>({
+  userId: {
+    type: String,
+    required: true,
+    index: true
+  },
   conversationId: {
     type: String,
     required: true
@@ -93,11 +99,10 @@ const MessageSchema = new Schema<IMessage>({
 });
 
 // Indexes for efficient queries
-// Index for role-based queries
-MessageSchema.index({ role: 1 });
-// Compound index for conversation messages sorted by timestamp (ascending)
-// This also covers single field queries on conversationId
-MessageSchema.index({ conversationId: 1, timestamp: 1 });
+// Compound index for user's messages in conversations sorted by timestamp
+MessageSchema.index({ userId: 1, conversationId: 1, timestamp: 1 });
+// Index for user's messages by role
+MessageSchema.index({ userId: 1, role: 1 });
 
 // Pre-save middleware to update conversation stats
 MessageSchema.pre('save', async function(next) {
