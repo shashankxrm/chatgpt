@@ -7,10 +7,9 @@ import { UserButton, useUser, SignInButton } from '@clerk/nextjs'
 
 interface HeaderProps {
   onToggleSidebar: () => void
-  sidebarOpen: boolean
 }
 
-export function Header({ onToggleSidebar, sidebarOpen }: HeaderProps) {
+export function Header({ onToggleSidebar }: HeaderProps) {
   const { isSignedIn, isLoaded } = useUser()
 
   return (

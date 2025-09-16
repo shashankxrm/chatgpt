@@ -9,8 +9,6 @@ import {
   MessageSquare,
   Settings,
   User,
-  ChevronLeft,
-  ChevronRight,
   MoreHorizontal,
   Edit3,
   Trash2,

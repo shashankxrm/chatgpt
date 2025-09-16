@@ -25,9 +25,6 @@ export default function RootLayout({
             <ThemeProvider
               defaultTheme="system"
               storageKey="chatgpt-theme"
-              attribute="class"
-              enableSystem
-              disableTransitionOnChange
             >
               {children}
             </ThemeProvider>

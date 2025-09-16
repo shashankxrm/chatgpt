@@ -35,7 +35,7 @@ export function ChatInterface() {
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} isMobile={isMobile} />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} sidebarOpen={sidebarOpen} />
+        <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         <MainContent />
       </div>
     </div>
