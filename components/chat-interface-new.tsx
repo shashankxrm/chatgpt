@@ -24,7 +24,7 @@ export function ChatInterface() {
   }, [])
 
   return (
-    <div className="flex h-screen bg-white dark:bg-[#212121] text-black dark:text-white relative">
+    <div className="flex h-screen bg-white dark:bg-[#212121] text-black dark:text-white relative overflow-hidden">
       {isMobile && sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
@@ -34,7 +34,7 @@ export function ChatInterface() {
 
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} isMobile={isMobile} />
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         <MainContent />
       </div>

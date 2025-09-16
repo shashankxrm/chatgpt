@@ -13,7 +13,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
   const { isSignedIn, isLoaded } = useUser()
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+    <header className="flex items-center justify-between px-4 py-3">
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
