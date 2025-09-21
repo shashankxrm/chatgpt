@@ -11,7 +11,7 @@ interface HeaderProps {
 
 export function Header({ onToggleSidebar }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#212121]">
+    <header className="flex items-center justify-between px-4 py-3 bg-white dark:bg-[#212121]">
       {/* Left Section */}
       <div className="flex items-center gap-2">
         {/* Mobile Hamburger Menu */}

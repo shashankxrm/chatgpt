@@ -362,7 +362,7 @@ export function ChatInterface({ currentConversationId, onConversationCreated }: 
         </div>
       )}
 
-      <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+      <div className="flex-shrink-0 bg-white dark:bg-gray-900">
         <div className="p-3 sm:p-4">
           <ChatInput onSendMessage={handleSendMessage} disabled={isLoading} />
         </div>
