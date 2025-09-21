@@ -17,6 +17,12 @@ import {
   Trash2,
   Check,
   X,
+  Search,
+  BookOpen,
+  Sparkles,
+  Bot,
+  FileText,
+  FolderOpen,
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
@@ -209,7 +215,8 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
         {(!isCollapsed || isMobile) && (
           <div className="p-3">
             <Button
-              className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-normal hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200"
+              variant="ghost"
+              className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-normal hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-pointer"
               onClick={handleNewChat}
               aria-label="Start new chat"
             >
@@ -219,10 +226,97 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
           </div>
         )}
 
+        {/* Navigation Items */}
+        {(!isCollapsed || isMobile) && (
+          <div className="px-3 space-y-1">
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-normal hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-pointer"
+            >
+              <Search className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+              <span className="flex-1 text-left">Search chats</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-normal hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-pointer"
+            >
+              <BookOpen className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+              <span className="flex-1 text-left">Library</span>
+            </Button>
+          </div>
+        )}
+
+        {/* Separator */}
+        {(!isCollapsed || isMobile) && (
+          <div className="px-3 py-2">
+            <div className="h-px bg-gray-200 dark:bg-gray-700" />
+          </div>
+        )}
+
+        {/* Tools Section */}
+        {(!isCollapsed || isMobile) && (
+          <div className="px-3 space-y-1">
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-normal hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-pointer"
+            >
+              <Sparkles className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+              <span className="flex-1 text-left">Sora</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-normal hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-pointer"
+            >
+              <Bot className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+              <span className="flex-1 text-left">GPTs</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-normal hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-pointer"
+            >
+              <FileText className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+              <span className="flex-1 text-left truncate">CV & Resume - Evaluator (AT...</span>
+            </Button>
+          </div>
+        )}
+
+        {/* Separator */}
+        {(!isCollapsed || isMobile) && (
+          <div className="px-3 py-2">
+            <div className="h-px bg-gray-200 dark:bg-gray-700" />
+          </div>
+        )}
+
+        {/* Projects Section */}
+        {(!isCollapsed || isMobile) && (
+          <div className="px-3 py-2">
+            <div className="flex items-center gap-2 px-3 py-2">
+              <FolderOpen className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Projects</span>
+              <span className="ml-auto bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-1.5 py-0.5 rounded">
+                NEW
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Separator */}
+        {(!isCollapsed || isMobile) && (
+          <div className="px-3 py-2">
+            <div className="h-px bg-gray-200 dark:bg-gray-700" />
+          </div>
+        )}
+
+        {/* Chats Section Header */}
+        {(!isCollapsed || isMobile) && (
+          <div className="px-3 py-2">
+            <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1">Chats</h3>
+          </div>
+        )}
+
         {!isCollapsed && (
           <ScrollArea className="flex-1 px-3 h-0" aria-label="Chat history">
             <div className="space-y-1 pb-4">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-2 sticky top-0 bg-gray-50 dark:bg-gray-800 z-10">Recent</div>
               {isLoading ? (
                 <div className="flex items-center justify-center p-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400">Loading conversations...</div>
@@ -259,7 +353,7 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
                         <Button
                           variant="ghost"
                           className={cn(
-                            "flex-1 justify-start text-left h-auto p-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors",
+                            "flex-1 justify-start text-left h-auto p-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer",
                             currentConversationId === chat.id && "bg-gray-200 dark:bg-gray-700"
                           )}
                           onClick={() => handleSelectConversation(chat.id)}
@@ -279,7 +373,7 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                               aria-label="Chat options"
                             >
                               <MoreHorizontal className="h-4 w-4" />
