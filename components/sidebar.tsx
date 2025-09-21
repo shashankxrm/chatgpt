@@ -173,7 +173,7 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
         aria-label="Chat navigation"
       >
         {/* Header Section */}
-        <div className="flex items-center justify-between p-3">
+        <div className="flex items-center justify-between px-3 py-3">
           {isCollapsed ? (
             /* Collapsed State - Only Logo with Hover Effect */
             <Button
@@ -191,7 +191,7 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
           ) : (
             /* Expanded State - Logo + Close Button */
             <>
-              <div className="flex items-center gap-2 cursor-pointer">
+              <div className="flex items-center gap-2 cursor-pointer px-3">
                 <div className="w-6 h-6 flex items-center justify-center">
                   <SiOpenai className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </div>
@@ -211,9 +211,9 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
           )}
         </div>
 
-        {/* New Chat Button */}
+        {/* Navigation Group */}
         {(!isCollapsed || isMobile) && (
-          <div className="p-3">
+          <div className="px-3 space-y-1 mb-4">
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-normal hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-pointer"
@@ -223,12 +223,6 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
               <PenSquare className="h-4 w-4 text-gray-600 dark:text-gray-300" />
               <span className="flex-1 text-left">New chat</span>
             </Button>
-          </div>
-        )}
-
-        {/* Navigation Items */}
-        {(!isCollapsed || isMobile) && (
-          <div className="px-3 space-y-1">
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-normal hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-pointer"
@@ -246,9 +240,9 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
           </div>
         )}
 
-        {/* Tools Section */}
+        {/* Tools Group */}
         {(!isCollapsed || isMobile) && (
-          <div className="px-3 space-y-1">
+          <div className="px-3 space-y-1 mb-4">
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-normal hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 cursor-pointer"
@@ -273,9 +267,9 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
           </div>
         )}
 
-        {/* Projects Section */}
+        {/* Projects Group */}
         {(!isCollapsed || isMobile) && (
-          <div className="px-3 py-2">
+          <div className="px-3 py-2 mb-4">
             <div className="flex items-center gap-2 px-3 py-2">
               <FolderOpen className="w-4 h-4 text-gray-600 dark:text-gray-300" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Projects</span>
@@ -286,9 +280,9 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
           </div>
         )}
 
-        {/* Chats Section Header */}
+        {/* Chats Group */}
         {(!isCollapsed || isMobile) && (
-          <div className="px-3 py-2">
+          <div className="px-3 py-2 mb-4">
             <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 px-3 py-1">Chats</h3>
           </div>
         )}
