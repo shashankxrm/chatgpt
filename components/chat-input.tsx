@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Paperclip, Send, X, FileText, ImageIcon, File, Mic, ArrowUp } from "lucide-react"
+import { Paperclip, X, FileText, ImageIcon, File, Mic, ArrowUp } from "lucide-react"
 
 interface AttachedFile {
   id: string

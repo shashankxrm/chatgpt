@@ -8,10 +8,7 @@ import { SiOpenai } from "react-icons/si";
 import { BsLayoutSidebar } from "react-icons/bs";
 import {
   PenSquare,
-  MessageSquare,
   Settings,
-  User,
-  ChevronLeft,
   MoreHorizontal,
   Edit3,
   Trash2,
