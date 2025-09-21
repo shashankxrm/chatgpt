@@ -133,10 +133,10 @@ export function MessageList({ messages, isLoading, onEditMessage, onRegenerateRe
   return (
     <div className="h-full flex flex-col" role="main" aria-label="Chat messages">
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto py-4 px-2 sm:px-4 space-y-4 sm:space-y-6">
+        <div className="max-w-3xl mx-auto py-4 px-4 sm:px-6 space-y-4 sm:space-y-6">
           {messages.map((message) => (
             <div key={message.id} className="group" role="article" aria-label={`${message.role} message`}>
-              <div className={cn("flex gap-2 sm:gap-4", message.role === "user" ? "justify-end" : "justify-start")}>
+              <div className={cn("flex gap-3 sm:gap-4", message.role === "user" ? "justify-end" : "justify-start")}>
                 {message.role === "assistant" && (
                   <Avatar className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0 mt-1" aria-label="ChatGPT">
                     <AvatarImage src="/chatgpt-logo-inspired.png" alt="ChatGPT" />
@@ -184,7 +184,7 @@ export function MessageList({ messages, isLoading, onEditMessage, onRegenerateRe
                       className={cn(
                         "rounded-2xl px-3 py-2 sm:px-4 sm:py-3 transition-all duration-200",
                         message.role === "user"
-                          ? "bg-gray-100 dark:bg-gray-700 ml-auto text-gray-900 dark:text-gray-100"
+                          ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                           : "bg-transparent border-none p-0 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 rounded-none",
                       )}
                     >

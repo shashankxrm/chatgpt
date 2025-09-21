@@ -292,7 +292,7 @@ export function ChatInterface({ currentConversationId, onConversationCreated }: 
     <div className="flex flex-col h-full relative" role="main" aria-label="Chat interface">
       {messages.length === 0 ? (
         <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-col items-center justify-center px-4 py-8 min-h-full">
+          <div className="flex flex-col items-center justify-center px-4 sm:px-6 py-8 min-h-full">
             <div className="text-center max-w-2xl w-full">
               <h1 className="text-xl md:text-2xl font-normal text-gray-800 dark:text-gray-200 mb-6 md:mb-8 text-balance">
                 What's on the agenda today?
