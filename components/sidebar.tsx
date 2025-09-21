@@ -349,11 +349,11 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex items-center">
+                      <div className="flex items-center group/chat hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors">
                         <Button
                           variant="ghost"
                           className={cn(
-                            "flex-1 justify-start text-left h-auto px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer rounded-md",
+                            "flex-1 justify-start text-left h-auto px-3 py-2.5 transition-colors cursor-pointer rounded-md hover:bg-transparent",
                             currentConversationId === chat.id && "bg-gray-100 dark:bg-gray-800"
                           )}
                           onClick={() => handleSelectConversation(chat.id)}
@@ -372,7 +372,7 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+                              className="h-8 w-8 p-0 opacity-0 group-hover/chat:opacity-100 transition-opacity cursor-pointer hover:bg-transparent rounded"
                               aria-label="Chat options"
                             >
                               <MoreHorizontal className="h-4 w-4 text-gray-600 dark:text-gray-300" />
