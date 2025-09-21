@@ -4,13 +4,14 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
+import { SiOpenai } from "react-icons/si";
+import { BsLayoutSidebar } from "react-icons/bs";
 import {
   PenSquare,
   MessageSquare,
   Settings,
   User,
   ChevronLeft,
-  ChevronRight,
   MoreHorizontal,
   Edit3,
   Trash2,
@@ -157,37 +158,64 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
     <>
       <div
         className={cn(
-          "flex flex-col bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 h-screen",
+          "flex flex-col bg-[#f7f7f8] dark:bg-[#171717] border-r border-gray-200 dark:border-gray-700 transition-all duration-300 h-screen",
           isMobile ? "w-80" : isCollapsed ? "w-16" : "w-64 md:w-80",
         )}
         role="navigation"
         aria-label="Chat navigation"
       >
-        <div className="p-3">
-          {/* Collapse button - hidden on mobile */}
-          {!isMobile && (
+        {/* Header Section */}
+        <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
+          {isCollapsed ? (
+            /* Collapsed State - Only Logo with Hover Effect */
             <Button
-              onClick={() => setIsCollapsed(!isCollapsed)}
+              onClick={() => setIsCollapsed(false)}
               variant="ghost"
-              size="icon"
-              className="mb-3"
-              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              size="sm"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 group cursor-pointer"
+              aria-label="Expand sidebar"
             >
-              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              <div className="w-6 h-6 flex items-center justify-center">
+                <SiOpenai className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:hidden" />
+                <BsLayoutSidebar className="w-5 h-5 text-gray-600 dark:text-gray-300 hidden group-hover:block" />
+              </div>
             </Button>
+          ) : (
+            /* Expanded State - Logo + Close Button */
+            <>
+              <div className="flex items-center gap-2 cursor-pointer">
+                <div className="w-6 h-6 flex items-center justify-center">
+                  <SiOpenai className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                </div>
+              </div>
+              {!isMobile && (
+                <Button
+                  onClick={() => setIsCollapsed(true)}
+                  variant="ghost"
+                  size="sm"
+                  className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                  aria-label="Collapse sidebar"
+                >
+                  <BsLayoutSidebar className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                </Button>
+              )}
+            </>
           )}
+        </div>
 
-          {(!isCollapsed || isMobile) && (
+        {/* New Chat Button */}
+        {(!isCollapsed || isMobile) && (
+          <div className="p-3">
             <Button
-              className="w-full justify-start gap-2 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600 transition-colors"
+              className="w-full justify-start gap-3 px-3 py-2.5 h-auto text-sm font-normal hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200"
               onClick={handleNewChat}
               aria-label="Start new chat"
             >
-              <PenSquare className="h-4 w-4" />
-              New chat
+              <PenSquare className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+              <span className="flex-1 text-left">New chat</span>
             </Button>
-          )}
-        </div>
+          </div>
+        )}
 
         {!isCollapsed && (
           <ScrollArea className="flex-1 px-3 h-0" aria-label="Chat history">
