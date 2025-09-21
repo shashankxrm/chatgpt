@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Paperclip, Send, X, FileText, ImageIcon, File } from "lucide-react"
+import { Paperclip, Send, X, FileText, ImageIcon, File, Mic, ArrowUp } from "lucide-react"
 
 interface AttachedFile {
   id: string
@@ -220,47 +220,52 @@ export function ChatInput({ onSendMessage, disabled }: ChatInputProps) {
       )}
 
       <form onSubmit={handleSubmit} className="relative">
-        <div className="relative flex items-end gap-1 sm:gap-2 p-2 sm:p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-sm focus-within:border-gray-300 dark:focus-within:border-gray-500 transition-all duration-200">
-          <div className="flex items-center gap-0.5 sm:gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-              onClick={handleAttach}
-              aria-label="Attach files"
-              disabled={disabled}
-            >
-              <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            </Button>
-
-          </div>
+        <div className="chatgpt-input flex items-center bg-white dark:bg-[#2f2f2f] border border-gray-200 dark:border-gray-600 rounded-full px-3 md:px-4 py-2.5 md:py-3 shadow-sm hover:shadow-md transition-shadow">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="p-1 mr-2 hover:bg-gray-100 dark:hover:bg-gray-700 shrink-0"
+            onClick={handleAttach}
+            aria-label="Attach files"
+            disabled={disabled}
+          >
+            <Paperclip className="w-4 h-4 md:w-5 md:h-5 text-gray-500 dark:text-gray-400" />
+          </Button>
 
           <Textarea
             ref={textareaRef}
             value={message}
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
-            placeholder="Message ChatGPT"
+            placeholder="Ask anything"
             disabled={disabled}
-            className="flex-1 min-h-[20px] max-h-[120px] sm:max-h-[200px] resize-none border-0 bg-transparent p-0 text-sm sm:text-base leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500 dark:placeholder:text-gray-400 pb-1 pl-1"
+            className="flex-1 border-0 bg-transparent dark:bg-transparent text-sm md:text-base placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-gray-100 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 resize-none min-h-[20px] max-h-[120px] md:max-h-[200px]"
             rows={1}
             aria-label="Message input"
             aria-describedby="input-help"
           />
 
-          <div className="flex items-center gap-0.5 sm:gap-1">
-            {/*  */}
+          <div className="flex items-center gap-1 md:gap-2 ml-2 shrink-0">
+            <Button 
+              type="button"
+              variant="ghost" 
+              size="sm" 
+              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+              disabled={disabled}
+            >
+              <Mic className="w-4 h-4 md:w-5 md:h-5 text-gray-500 dark:text-gray-400" />
+            </Button>
 
             {(message.trim() || attachedFiles.length > 0) && (
               <Button
                 type="submit"
                 size="sm"
                 disabled={disabled}
-                className="h-7 w-7 sm:h-8 sm:w-8 p-0 bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="p-1.5 bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 rounded-full"
                 aria-label="Send message"
               >
-                <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <ArrowUp className="w-3 h-3 md:w-4 md:h-4" />
               </Button>
             )}
           </div>
