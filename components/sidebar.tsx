@@ -8,7 +8,7 @@ import { SiOpenai } from "react-icons/si";
 import { BsLayoutSidebar } from "react-icons/bs";
 import {
   PenSquare,
-  Settings,
+  // Settings,
   MoreHorizontal,
   Edit3,
   Trash2,
@@ -434,7 +434,7 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
           ) : (
             /* Collapsed Profile Section */
             <div className="space-y-1">
-              <Button 
+              {/* <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={() => setShowSettings(true)} 
@@ -442,7 +442,7 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
                 className="w-full h-10 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <Settings className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-              </Button>
+              </Button> */}
               
               {!isLoaded ? (
                 <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse mx-auto" />
