@@ -294,8 +294,8 @@ export function ChatInterface({ currentConversationId, onConversationCreated }: 
         <div className="flex-1 overflow-y-auto">
           <div className="flex flex-col items-center justify-center px-4 py-8 min-h-full">
             <div className="text-center max-w-2xl w-full">
-              <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 dark:text-gray-100 mb-6 sm:mb-8 text-balance">
-                ChatGPT
+              <h1 className="text-xl md:text-2xl font-normal text-gray-800 dark:text-gray-200 mb-6 md:mb-8 text-balance">
+                What's on the agenda today?
               </h1>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <div

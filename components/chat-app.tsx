@@ -65,7 +65,7 @@ export function ChatApp() {
 
   return (
     <div
-      className="flex h-screen bg-white dark:bg-gray-900 overflow-hidden"
+      className="flex h-screen bg-white dark:bg-[#212121] overflow-hidden"
       role="application"
       aria-label="ChatGPT Interface"
     >
