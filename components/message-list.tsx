@@ -41,6 +41,39 @@ interface MessageListProps {
   onDeleteMessage?: (messageId: string) => void
 }
 
+// Helper function to convert MIME types to user-friendly names
+function getFileTypeDisplay(mimeType: string): string {
+  const typeMap: { [key: string]: string } = {
+    'image/jpeg': 'JPEG Image',
+    'image/png': 'PNG Image',
+    'image/gif': 'GIF Image',
+    'image/webp': 'WebP Image',
+    'image/svg+xml': 'SVG Image',
+    'application/pdf': 'PDF Document',
+    'application/msword': 'Word Document',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word Document',
+    'application/vnd.ms-excel': 'Excel Spreadsheet',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel Spreadsheet',
+    'application/vnd.ms-powerpoint': 'PowerPoint Presentation',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PowerPoint Presentation',
+    'text/plain': 'Text File',
+    'text/csv': 'CSV File',
+    'application/json': 'JSON File',
+    'text/html': 'HTML File',
+    'text/css': 'CSS File',
+    'text/javascript': 'JavaScript File',
+    'application/javascript': 'JavaScript File',
+    'text/typescript': 'TypeScript File',
+    'application/typescript': 'TypeScript File',
+    'text/markdown': 'Markdown File',
+    'application/zip': 'ZIP Archive',
+    'application/x-zip-compressed': 'ZIP Archive',
+  }
+  
+  // Return mapped name or extract main type from MIME type
+  return typeMap[mimeType] || mimeType.split('/')[1]?.toUpperCase() || 'File'
+}
+
 export function MessageList({ messages, isLoading, onEditMessage, onRegenerateResponse, onDeleteMessage }: MessageListProps) {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editContent, setEditContent] = useState("")
@@ -114,7 +147,11 @@ export function MessageList({ messages, isLoading, onEditMessage, onRegenerateRe
                 <div
                   className={cn(
                     "flex-1 space-y-2 min-w-0",
-                    message.role === "user" ? "max-w-[85%] sm:max-w-xs" : "max-w-none",
+                    message.role === "user" 
+                      ? message.attachments && message.attachments.length > 0 
+                        ? "max-w-[85%] sm:max-w-md" 
+                        : "max-w-[85%] sm:max-w-xs"
+                      : "max-w-none",
                   )}
                 >
                   {editingMessageId === message.id ? (
@@ -255,12 +292,12 @@ export function MessageList({ messages, isLoading, onEditMessage, onRegenerateRe
                                     </div>
                                   )}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                <div className="flex-1 min-w-0 overflow-hidden">
+                                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" title={file.name}>
                                     {file.name}
                                   </div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    {file.type} • {(file.size / 1024).toFixed(1)} KB
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    {getFileTypeDisplay(file.type)} • {(file.size / 1024).toFixed(1)} KB
                                   </div>
                                 </div>
                                 <div className="flex-shrink-0">
