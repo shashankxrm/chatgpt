@@ -11,7 +11,7 @@ interface HeaderProps {
 
 export function Header({ onToggleSidebar }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+    <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#212121]">
       {/* Left Section */}
       <div className="flex items-center gap-2">
         {/* Mobile Hamburger Menu */}
@@ -33,10 +33,10 @@ export function Header({ onToggleSidebar }: HeaderProps) {
               <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem>ChatGPT</DropdownMenuItem>
-            <DropdownMenuItem>GPT-4</DropdownMenuItem>
-            <DropdownMenuItem>GPT-3.5</DropdownMenuItem>
+          <DropdownMenuContent align="start" className="bg-white dark:bg-[#2f2f2f] border-gray-200 dark:border-gray-600">
+            <DropdownMenuItem className="text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">ChatGPT</DropdownMenuItem>
+            <DropdownMenuItem className="text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">GPT-4</DropdownMenuItem>
+            <DropdownMenuItem className="text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700">GPT-3.5</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -46,7 +46,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
         <Button
           variant="outline"
           size="sm"
-          className="bg-[#6366f1] hover:bg-[#5855eb] text-white border-[#6366f1] hover:border-[#5855eb] rounded-full px-4 py-1.5 text-sm font-medium"
+          className="bg-[#6366f1] hover:bg-[#5855eb] text-white border-[#6366f1] hover:border-[#5855eb] dark:bg-[#5855eb] dark:hover:bg-[#6366f1] dark:border-[#5855eb] dark:hover:border-[#6366f1] rounded-full px-4 py-1.5 text-sm font-medium"
         >
           Upgrade to Go
         </Button>
