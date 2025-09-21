@@ -36,10 +36,14 @@ interface ApiMessage {
   editedAt?: string
 }
 
-export function MainContent() {
+interface MainContentProps {
+  currentConversationId?: string | null
+  onConversationCreated?: (conversationId: string) => void
+}
+
+export function MainContent({ currentConversationId, onConversationCreated }: MainContentProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
 
   // Load messages for the current conversation
   const loadMessages = useCallback(async (conversationId: string) => {
@@ -109,7 +113,9 @@ export function MainContent() {
 
       // Update current conversation ID if this is a new conversation
       if (data.conversation_id && !currentConversationId) {
-        setCurrentConversationId(data.conversation_id)
+        if (onConversationCreated) {
+          onConversationCreated(data.conversation_id)
+        }
       }
 
       const assistantMessage: Message = {

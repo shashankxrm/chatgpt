@@ -39,6 +39,11 @@ interface SidebarProps {
   isOpen: boolean
   onToggle: () => void
   isMobile?: boolean
+  currentConversationId?: string | null
+  conversations?: Conversation[]
+  onNewChat?: () => void
+  onSelectConversation?: (conversationId: string) => void
+  onRefresh?: () => void
 }
 
 interface Conversation {
@@ -61,35 +66,20 @@ const toolItems = [
   { icon: FileText, label: "CV & Resume - Evaluator (AT..." },
 ]
 
-export function Sidebar({ isOpen, onToggle, isMobile }: SidebarProps) {
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
+export function Sidebar({ 
+  isOpen, 
+  onToggle, 
+  isMobile, 
+  currentConversationId, 
+  conversations = [], 
+  onNewChat, 
+  onSelectConversation, 
+  onRefresh 
+}: SidebarProps) {
   const [showSettings, setShowSettings] = useState(false)
   const [editingChatId, setEditingChatId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-
-  // Load conversations from API
-  const loadConversations = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      const response = await fetch('/api/conversations')
-      const data = await response.json()
-      
-      if (data.success) {
-        setConversations(data.conversations)
-      }
-    } catch (error) {
-      console.error('Error loading conversations:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  // Load conversations on component mount
-  useEffect(() => {
-    loadConversations()
-  }, [loadConversations])
 
   // Format timestamp for display
   const formatTimestamp = (dateString: string) => {
@@ -117,18 +107,14 @@ export function Sidebar({ isOpen, onToggle, isMobile }: SidebarProps) {
   }))
 
   const handleNewChat = () => {
-    setCurrentConversationId(null)
-    // Close sidebar on mobile after new chat
-    if (isMobile) {
-      onToggle()
+    if (onNewChat) {
+      onNewChat()
     }
   }
 
   const handleSelectConversation = (conversationId: string) => {
-    setCurrentConversationId(conversationId || null)
-    // Close sidebar on mobile after selection
-    if (isMobile) {
-      onToggle()
+    if (onSelectConversation) {
+      onSelectConversation(conversationId)
     }
   }
 
@@ -148,8 +134,8 @@ export function Sidebar({ isOpen, onToggle, isMobile }: SidebarProps) {
           body: JSON.stringify({ title: editTitle }),
         })
 
-        if (response.ok) {
-          loadConversations() // Refresh the sidebar
+        if (response.ok && onRefresh) {
+          onRefresh() // Refresh the sidebar
         }
       } catch (error) {
         console.error('Error updating conversation title:', error)
@@ -173,12 +159,14 @@ export function Sidebar({ isOpen, onToggle, isMobile }: SidebarProps) {
 
       if (response.ok) {
         // If this was the current conversation, clear it
-        if (currentConversationId === chatId) {
-          setCurrentConversationId(null)
+        if (currentConversationId === chatId && onSelectConversation) {
+          onSelectConversation('')
         }
         
         // Refresh the sidebar
-        loadConversations()
+        if (onRefresh) {
+          onRefresh()
+        }
       }
     } catch (error) {
       console.error('Error deleting conversation:', error)
