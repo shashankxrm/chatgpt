@@ -349,13 +349,13 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex items-center group/chat hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors">
+                      <div className={cn(
+                        "flex items-center group/chat hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors",
+                        currentConversationId === chat.id && "bg-gray-100 dark:bg-gray-800"
+                      )}>
                         <Button
                           variant="ghost"
-                          className={cn(
-                            "flex-1 justify-start text-left h-auto px-3 py-2.5 transition-colors cursor-pointer rounded-md hover:bg-transparent",
-                            currentConversationId === chat.id && "bg-gray-100 dark:bg-gray-800"
-                          )}
+                          className="flex-1 justify-start text-left h-auto px-3 py-2.5 transition-colors cursor-pointer rounded-md hover:bg-transparent"
                           onClick={() => handleSelectConversation(chat.id)}
                           aria-label={`Open chat: ${chat.title}`}
                         >
