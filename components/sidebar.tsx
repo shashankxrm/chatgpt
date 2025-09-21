@@ -167,13 +167,13 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
       <div
         className={cn(
           "flex flex-col bg-[#f7f7f8] dark:bg-[#171717] border-r border-gray-200 dark:border-gray-700 transition-all duration-300 h-screen",
-          isMobile ? "w-80" : isCollapsed ? "w-16" : "w-64 md:w-80",
+          isMobile ? "w-72" : isCollapsed ? "w-16" : "w-64 md:max-w-64",
         )}
         role="navigation"
         aria-label="Chat navigation"
       >
         {/* Header Section */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-3">
           {isCollapsed ? (
             /* Collapsed State - Only Logo with Hover Effect */
             <Button
@@ -246,13 +246,6 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
           </div>
         )}
 
-        {/* Separator */}
-        {(!isCollapsed || isMobile) && (
-          <div className="px-3 py-2">
-            <div className="h-px bg-gray-200 dark:bg-gray-700" />
-          </div>
-        )}
-
         {/* Tools Section */}
         {(!isCollapsed || isMobile) && (
           <div className="px-3 space-y-1">
@@ -280,13 +273,6 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
           </div>
         )}
 
-        {/* Separator */}
-        {(!isCollapsed || isMobile) && (
-          <div className="px-3 py-2">
-            <div className="h-px bg-gray-200 dark:bg-gray-700" />
-          </div>
-        )}
-
         {/* Projects Section */}
         {(!isCollapsed || isMobile) && (
           <div className="px-3 py-2">
@@ -297,13 +283,6 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
                 NEW
               </span>
             </div>
-          </div>
-        )}
-
-        {/* Separator */}
-        {(!isCollapsed || isMobile) && (
-          <div className="px-3 py-2">
-            <div className="h-px bg-gray-200 dark:bg-gray-700" />
           </div>
         )}
 
