@@ -89,7 +89,7 @@ export function ChatApp() {
             onClick={() => setIsSidebarOpen(false)}
           />
           {/* Mobile Sidebar */}
-          <div className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 z-50 md:hidden mobile-sidebar">
+          <div className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-gray-900 z-50 md:hidden mobile-sidebar">
             <Sidebar 
               currentConversationId={currentConversationId}
               conversations={conversations}

@@ -166,7 +166,7 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
     <>
       <div
         className={cn(
-          "flex flex-col bg-[#f7f7f8] dark:bg-[#171717] border-r border-gray-200 dark:border-gray-700 transition-all duration-300 h-screen",
+          "flex flex-col bg-[#f7f7f8] dark:bg-[#171717] transition-all duration-300 h-screen",
           isMobile ? "w-72" : isCollapsed ? "w-16" : "w-64 md:max-w-64",
         )}
         role="navigation"
