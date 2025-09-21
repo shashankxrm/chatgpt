@@ -21,6 +21,7 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { SettingsModal } from "@/components/settings/settings-modal"
+import { UserButton, useUser, SignInButton } from '@clerk/nextjs'
 
 interface ChatHistory {
   id: string
@@ -54,6 +55,7 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
   const [editingChatId, setEditingChatId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState("")
   const [isLoading] = useState(false)
+  const { isSignedIn, isLoaded, user } = useUser()
 
   // Format timestamp for display
   const formatTimestamp = (dateString: string) => {
@@ -306,35 +308,103 @@ export function Sidebar({ currentConversationId, conversations = [], onNewChat, 
           </ScrollArea>
         )}
 
+        {/* Profile Section */}
         <div className="p-3 border-t border-gray-200 dark:border-gray-700">
           {!isCollapsed ? (
+            /* Expanded Profile Section */
             <div className="space-y-1">
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-2 transition-colors"
-                onClick={() => setShowSettings(true)}
-                aria-label="Open settings"
-              >
-                <Settings className="h-4 w-4" />
-                Settings
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-2 transition-colors"
-                aria-label="View profile"
-              >
-                <User className="h-4 w-4" />
-                Profile
-              </Button>
+              
+              
+              {/* User Profile */}
+              <div className="flex items-center gap-3 px-3 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors">
+                {!isLoaded ? (
+                  <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+                ) : isSignedIn ? (
+                  <UserButton 
+                    appearance={{
+                      elements: {
+                        avatarBox: "w-6 h-6",
+                        userButtonPopoverCard: "shadow-lg",
+                      }
+                    }}
+                  />
+                ) : (
+                  <SignInButton mode="modal">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-3 px-0 py-0 h-auto text-sm font-normal hover:bg-transparent text-gray-700 dark:text-gray-200"
+                    >
+                      <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                        S
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="font-medium text-gray-900 dark:text-gray-100">Sign In</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Get started</div>
+                      </div>
+                    </Button>
+                  </SignInButton>
+                )}
+                
+                {isSignedIn && user && (
+                  <div className="flex-1 text-left">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                      {user.firstName || user.emailAddresses[0]?.emailAddress || 'User'}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Free</div>
+                  </div>
+                )}
+                
+                {isSignedIn && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs px-2 py-1 h-auto bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    Upgrade
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
+            /* Collapsed Profile Section */
             <div className="space-y-1">
-              <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)} aria-label="Open settings">
-                <Settings className="h-4 w-4" />
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowSettings(true)} 
+                aria-label="Open settings"
+                className="w-full h-10 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <Settings className="h-4 w-4 text-gray-600 dark:text-gray-300" />
               </Button>
-              <Button variant="ghost" size="icon" aria-label="View profile">
-                <User className="h-4 w-4" />
-              </Button>
+              
+              {!isLoaded ? (
+                <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse mx-auto" />
+              ) : isSignedIn ? (
+                <div className="flex justify-center">
+                  <UserButton 
+                    appearance={{
+                      elements: {
+                        avatarBox: "w-10 h-10",
+                        userButtonPopoverCard: "shadow-lg",
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <SignInButton mode="modal">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-10 h-10 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    aria-label="Sign in"
+                  >
+                    <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                      S
+                    </div>
+                  </Button>
+                </SignInButton>
+              )}
             </div>
           )}
         </div>
